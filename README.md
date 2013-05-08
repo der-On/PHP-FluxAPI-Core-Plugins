@@ -23,3 +23,7 @@ The plugins contain:
 - json
 - yaml
 - bson (planned)
+
+## Various
+
+- RESTfull routing
