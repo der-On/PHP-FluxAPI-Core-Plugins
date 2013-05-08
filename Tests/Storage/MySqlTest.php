@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../../FluxAPI/FluxApi_Database_TestCase.php';
+require_once __DIR__ . '/../FluxApi_Database_TestCase.php';
 
 use \FluxAPI\Field;
 

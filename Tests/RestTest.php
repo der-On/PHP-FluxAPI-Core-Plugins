@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../FluxAPI/FluxApi_Database_TestCase.php';
+require_once __DIR__ . '/FluxApi_Database_TestCase.php';
 
 use Symfony\Component\HttpKernel\Client;
 
@@ -50,7 +50,7 @@ class RestTest extends FluxApi_Database_TestCase
 
         $client = $this->createClient();
 
-        $data_json = file_get_contents(__DIR__ . '/../../FluxAPI/_files/node.json');
+        $data_json = file_get_contents(__DIR__ . '/_files/node.json');
 
         // first save the node
         $client->request('POST','/node.json',
@@ -87,7 +87,7 @@ class RestTest extends FluxApi_Database_TestCase
 
         $client = $this->createClient();
 
-        $data_xml = file_get_contents(__DIR__ . '/../../FluxAPI/_files/node.xml');
+        $data_xml = file_get_contents(__DIR__ . '/_files/node.xml');
 
         // first save the node
         $client->request('POST','/node.xml',
@@ -125,7 +125,7 @@ class RestTest extends FluxApi_Database_TestCase
 
         $client = $this->createClient();
 
-        $data_yaml = file_get_contents(__DIR__ . '/../../FluxAPI/_files/node.yml');
+        $data_yaml = file_get_contents(__DIR__ . '/_files/node.yml');
 
         // first save the node
         $client->request('POST','/node.yaml',
