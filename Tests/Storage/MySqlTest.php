@@ -73,11 +73,11 @@ class MySqlTest extends FluxApi_Database_TestCase
         // check that data is in the model
         $this->assertNotEmpty($model);
 
-        $this->assertEquals($model->int_field,$data['int_field']);
-        $this->assertEquals($model->date_field->format('Y-m-d'),$data['date_field']->format('Y-m-d'));
-        $this->assertEquals($model->datetime_field->format('Y-m-d H:i:s'),$data['date_field']->format('Y-m-d H:i:s'));
-        $this->assertEquals($model->timestamp_field,$data['timestamp_field']);
-        $this->assertEquals($model->array_field,$data['array_field']);
-        $this->assertEquals($model->object_field,$data['object_field']);
+        $this->assertEquals($model->int_field, $data['int_field']);
+        $this->assertEquals($model->date_field->format('Y-m-d'), $data['date_field']->format('Y-m-d'));
+        $this->assertEquals($model->datetime_field->format('Y-m-d H:i:s'), $data['datetime_field']->format('Y-m-d H:i:s'));
+        $this->assertEquals($model->timestamp_field, $data['timestamp_field']);
+        $this->assertEquals($model->array_field, $data['array_field']);
+        $this->assertEquals($model->object_field, $data['object_field']);
     }
 }

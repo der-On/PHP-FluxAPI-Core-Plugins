@@ -8,12 +8,10 @@ class FluxAPI extends \FluxAPI\Plugin
     public static function register(\FluxAPI\Api $api)
     {
         // do not enable REST when it's disabled in plugin.options
-        if (in_array('FluxAPI/Rest',$api->config['plugin.options']['disabled'])) {
-            return;
+        if (!in_array('FluxAPI/Rest',$api->config['plugin.options']['disabled'])) {
+            // create RESTfull webservice
+            $rest = new Rest($api);
         }
-
-        // create RESTfull webservice
-        $rest = new Rest($api);
 
         // register listeners for models to update author, updatedAt and createdAt
         $api->on(ModelEvent::CREATE, function(ModelEvent $event) {
