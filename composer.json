@@ -12,5 +12,8 @@
   ],
   "require": {
     "flux-api/installers": ">=0.1"
+  },
+  "extra": {
+    "installer-name": "FluxAPI"
   }
 }
