@@ -8,6 +8,8 @@ use Symfony\Component\Serializer\Exception\RuntimeException;
 
 class User extends \FluxAPI\Controller
 {
+    protected $_psl;
+
     public $config = array(
         'session' => array(
             'session.storage.options' => array(
@@ -28,10 +30,13 @@ class User extends \FluxAPI\Controller
         // add sessions service provider if not already present
         if (!isset($this->_api->app['session'])) {
             $this->_api->app->register(new \Silex\Provider\SessionServiceProvider(), $this->config['session']);
+
+            // start a session
+            $this->_api->app['session']->start();
         }
 
-        // change crypting method to bcrypt for more compatibility
-        \phpSec\Crypt\Hash::$_method = \phpSec\Crypt\Hash::PBKDF2;
+        $this->_psl = new \phpSec\Core();
+        $this->_psl['crypt/hash']->method = \phpSec\Crypt\Hash::PBKDF2;
     }
 
     /**
@@ -102,7 +107,7 @@ class User extends \FluxAPI\Controller
     public function getEncryptedPassword($password)
     {
         // TODO: do we really need a full stack security lib for this or can't we simply use hash()?
-        $hash = \phpSec\Crypt\Hash::create($password);
+        $hash = $this->_psl['crypt/hash']->create($password);
 
         return $hash;
     }

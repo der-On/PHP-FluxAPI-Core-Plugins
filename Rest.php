@@ -31,8 +31,8 @@ class Rest
 
     public function registerRoutes()
     {
-        $this->registerModelRoutes();
         $this->registerControllerRoutes();
+        $this->registerModelRoutes();
     }
 
     public function getUrlized($str)
@@ -337,14 +337,14 @@ class Rest
                 // TODO: guess the prefered method using action prefixes: set, get, update
 
                 // without extension
-                $this->_api->match($this->config['base_route'] . '/' . $controller_route_name . '/' . $action_route_name,
+                $this->_api->app->match($this->config['base_route'] . '/' . $controller_route_name . '/' . $action_route_name,
                     function(Request $request) use ($self, $controller_name, $action) {
                         return $self->callController($request, $controller_name, $action, $self->config['default_output_format']);
                     }
                 );
 
                 // with extension
-                $this->_api->match($this->config['base_route'] . '/' . $controller_route_name . '/' . $action_route_name . '.{ext}',
+                $this->_api->app->match($this->config['base_route'] . '/' . $controller_route_name . '/' . $action_route_name . '.{ext}',
                     function(Request $request, $ext) use ($self, $controller_name, $action) {
                         $format = $this->getFormatFromExtension($ext, $self->config['default_output_format']);
                         return $self->callController($request, $controller_name, $action, $format);
@@ -608,9 +608,12 @@ class Rest
             $input_format = $this->getInputFormat($request);
 
             $data = $this->getRequestData($request, $input_format);
+            $query = $request->query->all();
+
+            $params = array_merge($data, $query);
 
             try {
-                $result = $this->_api['controllers']->call($controller_name, $action, $data); // TODO: this will not work at all??!
+                $result = $this->_api['controllers']->call($controller_name, $action, $params); // TODO: this will not work at all??!
 
                 return $this->_createSuccessResponse($result, $format);
             } catch(\Exception $error) {
