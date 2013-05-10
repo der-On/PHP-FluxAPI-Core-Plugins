@@ -5,7 +5,8 @@
   "description": "Core plugins for the flux-api",
   "type": "flux-api-plugin",
   "require": {
-    "flux-api/installers": ">=0.1"
+    "flux-api/installers": ">=0.1",
+    "phpsec/phpsec": "0.6.*"
   },
   "extra": {
     "installer-name": "FluxAPI"

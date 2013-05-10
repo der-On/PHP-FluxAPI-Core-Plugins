@@ -32,6 +32,29 @@ class Rest
     public function registerRoutes()
     {
         $this->registerModelRoutes();
+        $this->registerControllerRoutes();
+    }
+
+    public function getUrlized($str)
+    {
+        // make lowercase
+        $str = strtolower($str);
+
+        // convert umlauts
+        $str = preg_replace(array('/ä/', '/ö/', '/ü/'), array('ae', 'oe', 'ue'), $str);
+
+        // convert to ascii only
+        $str = iconv('UTF-8', 'ASCII//TRANSLIT', $str);
+
+        // remove non alphanumeric characters
+        $str = preg_replace("/[^a-zA-Z0-9\/_|+ -]/", '', $str);
+
+        // trim and convert to lowercase
+        $str = strtolower(trim($str, '-'));
+
+        // convert spaces and such
+        $str = preg_replace('/[\/_|+ -]+/', '-', $str);
+        return $str;
     }
 
     public function getMimeTypeFromFormat($format, $default)
@@ -133,7 +156,7 @@ class Rest
 
         foreach($models as $model_name => $model_class)
         {
-            $model_route_name = strtolower($model_name);
+            $model_route_name = $this->getUrlized($model_name);
 
             // view/load single model
 
@@ -280,6 +303,54 @@ class Rest
                     return $self->deleteModels($request, $model_name, $self->config['default_output_format']);
                 }
             );
+
+
+            // count models
+            // with extension
+            $this->_api->app->get($this->config['base_route'] . '/' . $model_route_name . 's/count.{ext}',
+                function(Request $request, $ext) use ($self, $model_name) {
+                    $format = $this->getFormatFromExtension($ext, $self->config['default_output_format']);
+                    return $self->countModels($request, $model_name, $format);
+                }
+            );
+
+            // without extension
+            $this->_api->app->get($this->config['base_route'] . '/' . $model_route_name . 's/count',
+                function(Request $request) use ($self, $model_name) {
+                    return $self->countModels($request, $model_name, $self->config['default_output_format']);
+                }
+            );
+        }
+    }
+
+    public function registerControllerRoutes()
+    {
+        $self = $this;
+        $actions = $this->_api['controllers']->getActions();
+
+        foreach($actions as $controller_name => $_actions) {
+            $controller_route_name = $this->getUrlized($controller_name);
+
+            foreach($_actions as $action) {
+                $action_route_name = $this->getUrlized($action);
+
+                // TODO: guess the prefered method using action prefixes: set, get, update
+
+                // without extension
+                $this->_api->match($this->config['base_route'] . '/' . $controller_route_name . '/' . $action_route_name,
+                    function(Request $request) use ($self, $controller_name, $action) {
+                        return $self->callController($request, $controller_name, $action, $self->config['default_output_format']);
+                    }
+                );
+
+                // with extension
+                $this->_api->match($this->config['base_route'] . '/' . $controller_route_name . '/' . $action_route_name . '.{ext}',
+                    function(Request $request, $ext) use ($self, $controller_name, $action) {
+                        $format = $this->getFormatFromExtension($ext, $self->config['default_output_format']);
+                        return $self->callController($request, $controller_name, $action, $format);
+                    }
+                );
+            }
         }
     }
 
@@ -311,7 +382,8 @@ class Rest
                 return $this->_createErrorResponse($error, $format);
             }
         } else {
-            return NULL;
+            $error = new \InvalidArgumentException(sprintf('Model "%s" does not exist.', $model_name));
+            return $this->_createErrorResponse($error, $format);
         }
     }
 
@@ -348,7 +420,8 @@ class Rest
             }
 
         } else {
-            return NULL;
+            $error = new \InvalidArgumentException(sprintf('Model "%s" does not exist.', $model_name));
+            return $this->_createErrorResponse($error, $format);
         }
     }
 
@@ -378,7 +451,8 @@ class Rest
                 return $this->_createErrorResponse($error, $format);
             }
         } else {
-            return NULL;
+            $error = new \InvalidArgumentException(sprintf('Model "%s" does not exist.', $model_name));
+            return $this->_createErrorResponse($error, $format);
         }
     }
 
@@ -407,7 +481,8 @@ class Rest
                 return $this->_createErrorResponse($error, $format);
             }
         } else {
-            return NULL;
+            $error = new \InvalidArgumentException(sprintf('Model "%s" does not exist.', $model_name));
+            return $this->_createErrorResponse($error, $format);
         }
     }
 
@@ -432,7 +507,8 @@ class Rest
                 return $this->_createErrorResponse($error, $format);
             }
         } else {
-            return NULL;
+            $error = new \InvalidArgumentException(sprintf('Model "%s" does not exist.', $model_name));
+            return $this->_createErrorResponse($error, $format);
         }
     }
 
@@ -465,7 +541,8 @@ class Rest
                 return $this->_createErrorResponse($error, $format);
             }
         } else {
-            return NULL;
+            $error = new \InvalidArgumentException(sprintf('Model "%s" does not exist.', $model_name));
+            return $this->_createErrorResponse($error, $format);
         }
     }
 
@@ -494,7 +571,54 @@ class Rest
                 return $this->_createErrorResponse($error, $format);
             }
         } else {
-            return NULL;
+            $error = new \InvalidArgumentException(sprintf('Model "%s" does not exist.', $model_name));
+            return $this->_createErrorResponse($error, $format);
+        }
+    }
+
+    public function countModels(Request $request, $model_name, $format)
+    {
+        if ($this->_api['plugins']->hasPlugin('Model',$model_name)) {
+            $input_format = $this->getInputFormat($request);
+
+            $data = $this->getRequestData($request, $input_format);
+
+            $query = new Query();
+
+            $this->addFiltersToQueryFromRequest($request, $query);
+
+            $count_method = 'count' . $model_name . 's';
+
+            try {
+                $result = array( 'count' => $this->_api->$count_method($query) );
+
+                return $this->_createSuccessResponse($result, $format);
+            } catch (\Exception $error) {
+                return $this->_createErrorResponse($error, $format);
+            }
+        } else {
+            $error = new \InvalidArgumentException(sprintf('Model "%s" does not exist.', $model_name));
+            return $this->_createErrorResponse($error, $format);
+        }
+    }
+
+    public function callController(Request $request, $controller_name, $action, $format)
+    {
+        if ($this->_api['plugins']->hasPlugin('Controller',$controller_name)) {
+            $input_format = $this->getInputFormat($request);
+
+            $data = $this->getRequestData($request, $input_format);
+
+            try {
+                $result = $this->_api['controllers']->call($controller_name, $action, $data); // TODO: this will not work at all??!
+
+                return $this->_createSuccessResponse($result, $format);
+            } catch(\Exception $error) {
+                return $this->_createErrorResponse($error, $format);
+            }
+        } else {
+            $error = new \InvalidArgumentException(sprintf('Controller "%s" does not exist.', $controller_name));
+            return $this->_createErrorResponse($error, $format);
         }
     }
 
