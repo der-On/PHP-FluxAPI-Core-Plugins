@@ -631,6 +631,7 @@ class Rest
 
         if ($encode_data && isset($formats[ucfirst($format)])) {
             $format_class = $formats[ucfirst($format)];
+            $format_class::setApi($this->_api);
             $data = $format_class::encode($data);
         }
 
@@ -656,6 +657,7 @@ class Rest
 
         if ($encode_data && isset($formats[ucfirst($format)])) {
             $format_class = $formats[ucfirst($format)];
+            $format_class::setApi($this->_api);
             $data = $format_class::encode($data, array('root' => $model_name));
         }
 
