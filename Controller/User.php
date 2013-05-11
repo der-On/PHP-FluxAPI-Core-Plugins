@@ -53,7 +53,7 @@ class User extends \FluxAPI\Controller
         );
     }
 
-    public function login($username_or_email, $password)
+    public function login($username, $password)
     {
         if ($this->isLoggedIn()) {
             throw new \RuntimeException('There is already a user logged in. Please log out first.');
@@ -62,7 +62,7 @@ class User extends \FluxAPI\Controller
 
         $query = new Query();
         $query
-            ->filter('=', array(($this->config['auth']['require_email']) ? 'email' : 'username', $username_or_email))
+            ->filter('=', array(($this->config['auth']['require_email']) ? 'email' : 'username', $username))
             ->filter('=', array('password', $this->getEncryptedPassword($password) ));
 
         $user = $this->_api->loadUser($query);
