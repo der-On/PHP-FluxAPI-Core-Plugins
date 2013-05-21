@@ -8,6 +8,7 @@ The plugins contain:
 
 - MySQL
 - MongoDB (planned)
+- SQLLite (planned)
 
 ## Models
 
@@ -22,8 +23,34 @@ The plugins contain:
 - xml
 - json
 - yaml
+- html (in progress)
 - bson (planned)
+
+## FieldValidators
+
+- Required
+- Email
+- MinLength (planned)
+- MaxLength (planned)
+- Url (planned)
+- Min (planned)
+- Max (planned)
+- Date (planned)
+- DateTime (planned)
+- Time (planned)
+- Type (planned)
+- ...
+
+## Controllers
+
+- User: adds login/logout actions (in progress)
+
+## Permissions
+
+- User: does nothing yet
+
 
 ## Various
 
 - RESTfull routing
+- automaticly updating createdAt and updatedAt fields of any model extending the Plugins\FluxAPI\Model
