@@ -6,7 +6,8 @@
   "type": "flux-api-plugin",
   "require": {
     "flux-api/installers": ">=0.1",
-    "phpsec/phpsec": "0.6.*"
+    "phpsec/phpsec": "0.6.*",
+    "symfony/validator": "~2.3"
   },
   "extra": {
     "installer-name": "FluxAPI"

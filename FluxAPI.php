@@ -7,8 +7,17 @@ class FluxAPI extends \FluxAPI\Plugin
 {
     public static function register(\FluxAPI\Api $api)
     {
+        self::_registerValidators($api);
         self::_registerRest($api);
         self::_registerModelEvents($api);
+    }
+
+    protected static function _registerValidators(\FluxAPI\Api $api)
+    {
+        // register validator service if not present yet
+        if (!isset($api->app['validator'])) {
+            $api->app->register(new \Silex\Provider\ValidatorServiceProvider());
+        }
     }
 
     protected static function _registerRest(\FluxAPI\Api $api)

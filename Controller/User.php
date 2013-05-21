@@ -37,6 +37,30 @@ class User extends \FluxAPI\Controller
 
         $this->_psl = new \phpSec\Core();
         $this->_psl['crypt/hash']->method = \phpSec\Crypt\Hash::PBKDF2;
+
+        $this->_registerModelEvents();
+    }
+
+    protected function _registerModelEvents()
+    {
+        print('registering model events');
+        // register listeners for users to hash passwords
+        $this->_api->on(ModelEvent::CREATE, function(ModelEvent $event) {
+            $model = $event->getModel();
+
+            if (!empty($model) && is_subclass_of($model, '\\Plugins\\FluxAPI\\Model\\User') && $model->isNew()) {
+                print("user created");
+                $model->password = $this->getEncryptedPassword($model->password);
+            }
+        }, \FluxAPI\Api::EARLY_EVENT);
+
+        $this->_api->on(ModelEvent::BEFORE_SAVE, function(ModelEvent $event) {
+            $model = $event->getModel();
+
+            if (!empty($model) && is_subclass_of($model, '\\Plugins\\FluxAPI\\Model\\User')) {
+                // TODO: only encrypt non-encrypted passwords, but how to find out if password was changed during this update?
+            }
+        }, \FluxAPI\Api::EARLY_EVENT);
     }
 
     /**
