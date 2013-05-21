@@ -1,6 +1,6 @@
 {
   "name": "flux-api/plugins/flux-api",
-  "license": "GPL",
+  "license": "GPL-3.0+",
   "version": "0.1",
   "description": "Core plugins for the flux-api",
   "type": "flux-api-plugin",
