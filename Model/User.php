@@ -12,15 +12,18 @@ class User extends \Plugins\FluxAPI\Model
 
         $this->addField(new Field(array(
             'type' => Field::TYPE_STRING,
-            'name' => 'username'
+            'name' => 'username',
+            'validators' => array('Required')
         )))
         ->addField(new Field(array(
             'type' => Field::TYPE_STRING,
-            'name' => 'email'
+            'name' => 'email',
+            'validators' => array('Required','Email')
         )))
         ->addField(new Field(array(
             'type' => Field::TYPE_STRING,
-            'name' => 'password'
+            'name' => 'password',
+            'validators' => array('Required')
         )))
         ->addField(new Field(array(
             'type' => Field::TYPE_STRING,

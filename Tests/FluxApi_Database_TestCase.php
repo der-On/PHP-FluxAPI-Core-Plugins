@@ -22,6 +22,8 @@ abstract class FluxApi_Database_TestCase extends PHPUnit_Extensions_Database_Tes
         $conn = $this->getConnection();
         self::$pdo->exec('DROP TABLE IF EXISTS node');
         self::$pdo->exec('DROP TABLE IF EXISTS node_rel');
+        self::$pdo->exec('DROP TABLE IF EXISTS testmodel');
+        self::$pdo->exec('DROP TABLE IF EXISTS testmodel_rel');
 
         // create application
         $app = new Silex\Application();
