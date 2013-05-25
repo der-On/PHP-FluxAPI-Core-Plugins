@@ -23,7 +23,7 @@ class Rest
         if (!isset($this->_api->config['plugins.core.rest'])) {
             $this->_api->config['plugins.core.rest'] = $this->config;
         } else {
-            $this->config = array_replace_recursive($this->_api->config['plugins.core.rest'],$this->config);
+            $this->config = array_replace_recursive($this->config, $this->_api->config['plugins.core.rest']);
         }
 
         $this->registerRoutes();
@@ -332,19 +332,29 @@ class Rest
             $controller_route_name = $this->getUrlized($controller_name);
 
             foreach($_actions as $action) {
-                $action_route_name = $this->getUrlized($action);
+                // index routes do not have the action name appended to the route
+                if ($action == 'index') {
+                    $action_rounte_name = '';
+                } else {
+                    $action_route_name = $this->getUrlized($action);
+                }
 
                 // TODO: guess the prefered method using action prefixes: set, get, update
 
+                $route = $this->config['base_route'] . '/' . $controller_route_name;
+                if (!empty($action_rounte_name)) {
+                    $route .= '/' . $action_route_name;
+                }
+
                 // without extension
-                $this->_api->app->match($this->config['base_route'] . '/' . $controller_route_name . '/' . $action_route_name,
+                $this->_api->app->match($route,
                     function(Request $request) use ($self, $controller_name, $action) {
                         return $self->callController($request, $controller_name, $action, $self->config['default_output_format']);
                     }
                 );
 
                 // with extension
-                $this->_api->app->match($this->config['base_route'] . '/' . $controller_route_name . '/' . $action_route_name . '.{ext}',
+                $this->_api->app->match($route . '.{ext}',
                     function(Request $request, $ext) use ($self, $controller_name, $action) {
                         $format = $this->getFormatFromExtension($ext, $self->config['default_output_format']);
                         return $self->callController($request, $controller_name, $action, $format);
