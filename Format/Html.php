@@ -26,12 +26,16 @@ class Html extends Xml
 
     public static function encode($data, array $options = NULL)
     {
-        if (empty($options)) {
-            $options = array('root' => 'html');
+        if (is_string($data)) {
+            return $data;
         } else {
-            $options['root'] = 'html';
-        }
+            if (empty($options)) {
+                $options = array('root' => 'html');
+            } else {
+                $options['root'] = 'html';
+            }
 
-        return parent::encode($data, $options);
+            return parent::encode($data, $options);
+        }
     }
 }
