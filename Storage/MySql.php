@@ -28,6 +28,12 @@ class MySql extends \FluxAPI\Storage
 
     public function filterSelect(&$qb, array $params)
     {
+        $isId = ($params[0] == 'id');
+
+        if ($isId) {
+            $params[1] = $this->uuidToHex($params[1]);
+        }
+
         $qb->select($params);
         return $qb;
     }
@@ -326,7 +332,10 @@ class MySql extends \FluxAPI\Storage
         parent::executeQuery($query);
 
         $model_name = $query->getModelName();
+
+        $this->_api['permissions']->setAccessOverride(TRUE, TRUE);
         $model = $this->_api['models']->create($model_name);
+
         $fields = $model->getFields();
         $tableName = $this->getTableName($model_name);
 
@@ -432,6 +441,9 @@ class MySql extends \FluxAPI\Storage
             } else {
                 $instances = array();
 
+                // temporary allow everything
+                $this->_api['permissions']->setAccessOverride(TRUE);
+
                 foreach($result as $data) {
                     // unserialize the data
                     foreach($data as $name => $value) {
@@ -442,6 +454,10 @@ class MySql extends \FluxAPI\Storage
 
                     $instances[] = $this->_api['models']->create($model_name, $data, NULL, FALSE);
                 }
+
+                // and reset access control
+                $this->_api['permissions']->unsetAccessOverride();
+
                 return $instances;
             }
         }

@@ -4,6 +4,7 @@ namespace Plugins\FluxAPI\Controller;
 
 use Doctrine\Common\Proxy\Exception\InvalidArgumentException;
 use FluxAPI\Query;
+use FluxAPI\Event\ModelEvent;
 use Symfony\Component\Serializer\Exception\RuntimeException;
 
 class User extends \FluxAPI\Controller
@@ -25,7 +26,13 @@ class User extends \FluxAPI\Controller
     {
         parent::__construct($api);
 
-        $this->config = array_replace_recursive($this->config, $this->_api->config['plugin.options']['FluxAPI']);
+        if (isset($this->_api->config['plugin.options']['FluxAPI'])) {
+            $this->config = array_replace_recursive($this->config, $this->_api->config['plugin.options']['FluxAPI']);
+        }
+
+        if (isset($this->_api->config['temp_path'])) {
+            $this->config['session']['session.storage.save_path'] = $this->_api->config['temp_path'];
+        }
 
         // add sessions service provider if not already present
         if (!isset($this->_api->app['session'])) {
@@ -43,7 +50,6 @@ class User extends \FluxAPI\Controller
 
     protected function _registerModelEvents()
     {
-        print('registering model events');
         // register listeners for users to hash passwords
         $this->_api->on(ModelEvent::CREATE, function(ModelEvent $event) {
             $model = $event->getModel();
@@ -73,7 +79,9 @@ class User extends \FluxAPI\Controller
     {
         return array(
           'login',
-          'logout'
+          'logout',
+          'isLoggedIn',
+          'getCurrent'
         );
     }
 
@@ -86,16 +94,24 @@ class User extends \FluxAPI\Controller
 
         $query = new Query();
         $query
+            ->filter('=', array('active', TRUE))
             ->filter('=', array(($this->config['auth']['require_email']) ? 'email' : 'username', $username))
-            ->filter('=', array('password', $this->getEncryptedPassword($password) ));
+            ;
 
+        // temporary allow everything
+        $this->_api['permissions']->setAccessOverride(TRUE, TRUE);
         $user = $this->_api->loadUser($query);
 
         if ($user) {
-            $this->_api->app['session']->set('userId', $user->id);
-            return TRUE;
+            if ($this->checkEncryptedPassword($password, $user->password)) {
+                $this->_api->app['session']->set('userId', $user->id);
+                return TRUE;
+            } else {
+                throw new \InvalidArgumentException('Incorrect password or username given.');
+                return FALSE;
+            }
         } else {
-            throw new \InvalidArgumentException('No user with the given username or incorrect password.');
+            throw new \InvalidArgumentException('No user with the given username exists.');
             return FALSE;
         }
     }
@@ -108,9 +124,13 @@ class User extends \FluxAPI\Controller
     public function isLoggedIn()
     {
         $userId = $this->_api->app['session']->get('userId', null);
+
         if (!empty($userId)) {
             $query = new Query();
-            $query->filter('=',array('id', $userId));
+            $query
+                ->filter('=', array('id', $userId))
+                ->filter('=', array('active', TRUE))
+                ;
 
             return ($this->_api->countUsers($query) > 0);
         }
@@ -122,7 +142,11 @@ class User extends \FluxAPI\Controller
         $userId = $this->_api->app['session']->get('userId', null);
 
         if(!empty($userId)) {
-            return $this->_api->loadUser($userId);
+            // temporary allow everything
+            $this->_api['permissions']->setAccessOverride(TRUE, TRUE);
+            $user = $this->_api->loadUser($userId);
+
+            return $user;
         }
 
         return NULL;
@@ -134,5 +158,10 @@ class User extends \FluxAPI\Controller
         $hash = $this->_psl['crypt/hash']->create($password);
 
         return $hash;
+    }
+
+    public function checkEncryptedPassword($password, $encrypted)
+    {
+        return $this->_psl['crypt/hash']->check($password, $encrypted);
     }
 }
