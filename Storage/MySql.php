@@ -333,8 +333,10 @@ class MySql extends \FluxAPI\Storage
 
         $model_name = $query->getModelName();
 
-        $this->_api['permissions']->setAccessOverride(TRUE, TRUE);
+        $this->_api['permissions']->setAccessOverride(TRUE);
         $model = $this->_api['models']->create($model_name);
+
+        $this->_api['permissions']->unsetAccessOverride();
 
         $fields = $model->getFields();
         $tableName = $this->getTableName($model_name);
