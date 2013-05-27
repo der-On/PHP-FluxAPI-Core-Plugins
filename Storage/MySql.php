@@ -40,7 +40,8 @@ class MySql extends \FluxAPI\Storage
 
     public function filterEqual(&$qb, array $params)
     {
-        $isId = ($params[0] == 'id' || substr($params[0],-3) == '_id');
+        $isField = (isset($params[2]) && $params[2] == 'field');
+        $isId = (!$isField && $params[0] == 'id' || substr($params[0],-3) == '_id');
 
         if ($isId) {
             $params[1] = $this->uuidToHex($params[1]);
@@ -183,6 +184,7 @@ class MySql extends \FluxAPI\Storage
                 'user' => $this->config['user'],
                 'password' => $this->config['password'],
                 'dbname' => $this->config['database'],
+                'charset' => 'UTF8',
                 'debug_sql' => FALSE,
             ),
         ));
@@ -220,20 +222,22 @@ class MySql extends \FluxAPI\Storage
         if ($field->type == Field::TYPE_RELATION && !empty($field->relationModel)) {
             $id = $model->id;
             $model_name = $model->getModelName();
+            $rel_model_name = $field->relationModel;
             $id_field_name = strtolower($model_name).'_id';
 
             $table_name = $this->getTableName($model_name);
+            $rel_table_name = $this->getTableName($rel_model_name);
             $relation_table = $this->getRelationTableName($model_name);
 
             $rel_field_name = $field->name.'_id';
 
             $query = new Query();
-            $query->filter('join',array('left', $table_name, $relation_table, $relation_table.'.'.$id_field_name.'='.$this->uuidToHex($id)))
-                  ->filter('equal',array($table_name.'.id',$relation_table.'.'.$rel_field_name,'field'));
+            $query->filter('join',array('left', $rel_table_name, $relation_table, $relation_table.'.'.$id_field_name.'='.$this->uuidToHex($id)))
+                  ->filter('equal',array('id' , $relation_table.'.'.$rel_field_name, 'field'));
 
-            $models = $this->load($model_name,$query);
+            $models = $this->load($rel_model_name, $query);
 
-            if (in_array($field->relationType,array(Field::BELONGS_TO_ONE,Field::HAS_ONE))) {
+            if (in_array($field->relationType,array(Field::BELONGS_TO_ONE, Field::HAS_ONE))) {
                 if (count($models) > 0) {
                     return $models[0];
                 } else {
@@ -333,10 +337,10 @@ class MySql extends \FluxAPI\Storage
 
         $model_name = $query->getModelName();
 
-        $this->_api['permissions']->setAccessOverride(TRUE);
+        $this->_api['permissions']->setAccessOverride(TRUE, 'Model', $model_name, 'create');
         $model = $this->_api['models']->create($model_name);
 
-        $this->_api['permissions']->unsetAccessOverride();
+        $this->_api['permissions']->unsetAccessOverride('Model', $model_name, 'create');
 
         $fields = $model->getFields();
         $tableName = $this->getTableName($model_name);
@@ -393,7 +397,7 @@ class MySql extends \FluxAPI\Storage
             switch($query->getType()) {
                 case Query::TYPE_SELECT:
                     $qb->select('*'); // by default select all fields
-                    $qb->from($tableName,$tableName);
+                    $qb->from($tableName, $tableName);
                     break;
 
                 case Query::TYPE_DELETE:
@@ -444,7 +448,7 @@ class MySql extends \FluxAPI\Storage
                 $instances = array();
 
                 // temporary allow everything
-                $this->_api['permissions']->setAccessOverride(TRUE);
+                $this->_api['permissions']->setAccessOverride(TRUE, 'Model', $model_name, 'create');
 
                 foreach($result as $data) {
                     // unserialize the data
@@ -458,7 +462,7 @@ class MySql extends \FluxAPI\Storage
                 }
 
                 // and reset access control
-                $this->_api['permissions']->unsetAccessOverride();
+                $this->_api['permissions']->unsetAccessOverride('Model', $model_name, 'create');
 
                 return $instances;
             }
@@ -535,7 +539,11 @@ class MySql extends \FluxAPI\Storage
         $models = $this->_api['plugins']->getPlugins('Model');
 
         foreach($models as $model_name => $modelClass) {
+            $this->_api['permissions']->setAccessOverride(TRUE, 'Model', $model_name, 'create');
+
             $model = $this->_api['models']->create($model_name);
+
+            $this->_api['permissions']->unsetAccessOverride('Model', $model_name, 'create');
             $table_name = $this->getTableName($model_name);
             $table = $toSchema->createTable($table_name);
             $primary = array();

@@ -99,10 +99,10 @@ class User extends \FluxAPI\Controller
             ;
 
         // temporary allow everything
-        $this->_api['permissions']->setAccessOverride(TRUE);
+        $this->_api['permissions']->setAccessOverride(TRUE, 'Model', 'User', 'load');
         $user = $this->_api->loadUser($query);
 
-        $this->_api['permissions']->unsetAccessOverride();
+        $this->_api['permissions']->unsetAccessOverride('Model', 'User', 'load');
 
         if ($user) {
             if ($this->checkEncryptedPassword($password, $user->password)) {
@@ -145,10 +145,10 @@ class User extends \FluxAPI\Controller
 
         if(!empty($userId)) {
             // temporary allow everything
-            $this->_api['permissions']->setAccessOverride(TRUE);
+            $this->_api['permissions']->setAccessOverride(TRUE, 'Model', 'User', 'load');
             $user = $this->_api->loadUser($userId);
 
-            $this->_api['permissions']->unsetAccessOverride();
+            $this->_api['permissions']->unsetAccessOverride('Model', 'User', 'load');
 
             return $user;
         }
