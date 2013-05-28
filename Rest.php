@@ -334,7 +334,7 @@ class Rest
             foreach($_actions as $action) {
                 // index routes do not have the action name appended to the route
                 if ($action == 'index') {
-                    $action_rounte_name = '';
+                    $action_route_name = '';
                 } else {
                     $action_route_name = $this->getUrlized($action);
                 }
@@ -342,7 +342,7 @@ class Rest
                 // TODO: guess the prefered method using action prefixes: set, get, update
 
                 $route = $this->config['base_route'] . '/' . $controller_route_name;
-                if (!empty($action_rounte_name)) {
+                if (!empty($action_route_name)) {
                     $route .= '/' . $action_route_name;
                 }
 

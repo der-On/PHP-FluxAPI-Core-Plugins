@@ -62,25 +62,42 @@ class MySql extends \FluxAPI\Storage
 
     public function filterGreaterThen(&$qb, array $params)
     {
-        $qb->andWhere($qb->expr()->gt($params[0],$params[1]));
+        if (is_numeric($params[1])) {
+            $qb->andWhere($qb->expr()->gt($params[0], $params[1]));
+        } else {
+            $qb->andWhere($qb->expr()->gt($params[0], $qb->expr()->literal($params[1])));
+        }
+
         return $qb;
     }
 
     public function filterGreaterThenOrEqual(&$qb, array $params)
     {
-        $qb->andWhere($qb->expr()->gte($params[0],$params[1]));
+        if (is_numeric($params[1])) {
+            $qb->andWhere($qb->expr()->gte($params[0], $params[1]));
+        } else {
+            $qb->andWhere($qb->expr()->gte($params[0], $qb->expr()->literal($params[1])));
+        }
         return $qb;
     }
 
     public function filterLessThen(&$qb, array $params)
     {
-        $qb->andWhere($qb->expr()->lt($params[0],$params[1]));
+        if (is_numeric($params[1])) {
+            $qb->andWhere($qb->expr()->lt($params[0], $params[1]));
+        } else {
+            $qb->andWhere($qb->expr()->lt($params[0], $qb->expr()->literal($params[1])));
+        }
         return $qb;
     }
 
     public function filterLessThenOrEqual(&$qb, array $params)
     {
-        $qb->andWhere($qb->expr()->lte($params[0],$params[1]));
+        if (is_numeric($params[1])) {
+            $qb->andWhere($qb->expr()->lte($params[0], $params[1]));
+        } else {
+            $qb->andWhere($qb->expr()->lte($params[0], $qb->expr()->literal($params[1])));
+        }
         return $qb;
     }
 
