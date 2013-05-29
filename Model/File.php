@@ -28,14 +28,13 @@ class File extends \Plugins\FluxAPI\Model
                 'name' => 'path',
                 'type' => Field::TYPE_STRING,
                 'length' => 2048,
-                'validators' => array('Required','Url'),
+                'validators' => array('Required'),
             )))
             // path to the preview image
             ->addField(new Field(array(
                 'name' =>  'preview',
                 'type' => Field::TYPE_STRING,
                 'length' => 2048,
-                'validators' => array('Url'),
             )))
             // filetype/extension
             ->addField(new Field(array(
