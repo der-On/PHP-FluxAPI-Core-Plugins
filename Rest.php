@@ -623,7 +623,11 @@ class Rest
             $params = array_merge($data, $query);
 
             try {
-                $result = $this->_api['controllers']->call($controller_name, $action, $params); // TODO: this will not work at all??!
+                $result = $this->_api['controllers']->call($controller_name, $action, $params, array(
+                    'request' => $request,
+                    'output_format' => $format,
+                    'input_format' => $input_format,
+                ));
 
                 return $this->_createSuccessResponse($result, $format);
             } catch(\Exception $error) {
