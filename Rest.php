@@ -350,7 +350,7 @@ class Rest
 
             foreach($_actions as $action => $options) {
                 // action overrides route
-                if ($options['route']) {
+                if (isset($options['route']) && !empty($options['route'])) {
                     $route = $this->config['base_route'] . '/' . $options['route'];
                 }
                 // no explicit route given, so generate it
