@@ -55,7 +55,6 @@ class User extends \FluxAPI\Controller
             $model = $event->getModel();
 
             if (!empty($model) && is_subclass_of($model, '\\Plugins\\FluxAPI\\Model\\User') && $model->isNew()) {
-                print("user created");
                 $model->password = $this->getEncryptedPassword($model->password);
             }
         }, \FluxAPI\Api::EARLY_EVENT);
