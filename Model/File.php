@@ -38,10 +38,11 @@ class File extends \Plugins\FluxAPI\Model
             )))
             // filetype/extension
             ->addField(new Field(array(
-               'name' => 'type',
-               'type' => Field::TYPE_STRING,
-               'length' => 4,
-               'validators' => array('StripTags'),
+                'name' => 'mimetype',
+                'type' => Field::TYPE_STRING,
+                'length' => 4,
+                'default' => 'text',
+                'validators' => array('Required'),
             )))
             // file size in bytes
             ->addField(new Field(array(
