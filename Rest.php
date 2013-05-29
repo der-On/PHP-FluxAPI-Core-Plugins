@@ -349,18 +349,25 @@ class Rest
             $controller_route_name = $this->getUrlized($controller_name);
 
             foreach($_actions as $action => $options) {
-                // index routes do not have the action name appended to the route
-                if ($action == 'index') {
-                    $action_route_name = '';
-                } else {
-                    $action_route_name = $this->getUrlized($action);
+                // action overrides route
+                if ($options['route']) {
+                    $route = $this->config['base_route'] . '/' . $options['route'];
                 }
+                // no explicit route given, so generate it
+                else {
+                    // index routes do not have the action name appended to the route
+                    if ($action == 'index') {
+                        $action_route_name = '';
+                    } else {
+                        $action_route_name = $this->getUrlized($action);
+                    }
 
-                // TODO: guess the prefered method using action prefixes: set, get, update
+                    // TODO: guess the prefered method using action prefixes: set, get, update
 
-                $route = $this->config['base_route'] . '/' . $controller_route_name;
-                if (!empty($action_route_name)) {
-                    $route .= '/' . $action_route_name;
+                    $route = $this->config['base_route'] . '/' . $controller_route_name;
+                    if (!empty($action_route_name)) {
+                        $route .= '/' . $action_route_name;
+                    }
                 }
 
                 // action has explicit method
