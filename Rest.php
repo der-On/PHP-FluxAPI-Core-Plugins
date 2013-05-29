@@ -13,7 +13,7 @@ class Rest
         'base_route' => '',
         'default_input_format' => \FluxAPI\Api::DATA_FORMAT_ARRAY,
         'default_output_format' => 'json',
-        'default_mime_type' => 'application/json'
+        'default_mime_type' => 'application/json',
     );
 
     public function __construct(\FluxAPI\Api $api)
@@ -106,6 +106,23 @@ class Rest
                 return strtolower($format);
                 continue;
             }
+        }
+
+        return $default;
+    }
+
+    public function getExtensionFromFormat($format, $default)
+    {
+        if (empty($format)) {
+            return $default;
+        }
+
+        $format = ucfirst(strtolower(trim($format)));
+
+        $format_class = $this->_api['plugins']->getPluginClass('Format', $format);
+
+        if ($format_class) {
+            return $format_class::getExtension();
         }
 
         return $default;
@@ -331,7 +348,7 @@ class Rest
         foreach($actions as $controller_name => $_actions) {
             $controller_route_name = $this->getUrlized($controller_name);
 
-            foreach($_actions as $action) {
+            foreach($_actions as $action => $options) {
                 // index routes do not have the action name appended to the route
                 if ($action == 'index') {
                     $action_route_name = '';
@@ -346,20 +363,46 @@ class Rest
                     $route .= '/' . $action_route_name;
                 }
 
-                // without extension
-                $this->_api->app->match($route,
-                    function(Request $request) use ($self, $controller_name, $action) {
-                        return $self->callController($request, $controller_name, $action, $self->config['default_output_format']);
-                    }
-                );
+                // action has explicit method
+                if (isset($options['method']) && in_array(strtolower($options['method']), array('get','post','put','delete','update'))) {
+                    $method = strtolower($options['method']);
+                } else {
+                    $method = 'match';
+                }
 
-                // with extension
-                $this->_api->app->match($route . '.{ext}',
-                    function(Request $request, $ext) use ($self, $controller_name, $action) {
-                        $format = $this->getFormatFromExtension($ext, $self->config['default_output_format']);
-                        return $self->callController($request, $controller_name, $action, $format);
-                    }
-                );
+                // action has explicit output format
+                if (isset($options['output_format'])) {
+                    $format = $options['output_format'];
+                    $ext = $this->getExtensionFromFormat($format, $this->config['default_output_format']);
+                } else {
+                    $format = FALSE;
+                }
+
+                // without extension
+                if ($format === FALSE || $format == $this->config['default_output_format']) {
+                    $this->_api->app->$method($route,
+                        function(Request $request) use ($self, $controller_name, $action) {
+                            return $self->callController($request, $controller_name, $action, $self->config['default_output_format']);
+                        }
+                    );
+                }
+
+                if ($format === FALSE) {
+                    // with extension
+                    $this->_api->app->$method($route . '.{ext}',
+                        function(Request $request, $ext) use ($self, $controller_name, $action) {
+                            $format = $this->getFormatFromExtension($ext, $self->config['default_output_format']);
+                            return $self->callController($request, $controller_name, $action, $format);
+                        }
+                    );
+                } else {
+                    // with fixed format
+                    $this->_api->app->$method($route . '.' . $ext,
+                        function(Request $request) use ($self, $controller_name, $action, $format) {
+                            return $self->callController($request, $controller_name, $action, $format);
+                        }
+                    );
+                }
             }
         }
     }
