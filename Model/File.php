@@ -43,6 +43,11 @@ class File extends \Plugins\FluxAPI\Model
                'length' => 4,
                'validators' => array('StripTags'),
             )))
+            // file size in bytes
+            ->addField(new Field(array(
+                'name' => 'size',
+                'type' => Field::TYPE_INTEGER,
+            )))
             ;
     }
 }
