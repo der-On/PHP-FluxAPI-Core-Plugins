@@ -696,7 +696,12 @@ class Rest
                     'input_format' => $input_format,
                 ));
 
-                return $this->_createSuccessResponse($result, $format);
+                // if controller returns a response we pass it back directly
+                if (is_object($result) && is_subclass_of($result, Respone)) {
+                    return $result;
+                } else {
+                    return $this->_createSuccessResponse($result, $format);
+                }
             } catch(\Exception $error) {
                 return $this->_createErrorResponse($error, $format);
             }
