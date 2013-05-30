@@ -381,34 +381,51 @@ class Rest
                 if (isset($options['output_format'])) {
                     $format = $options['output_format'];
                     $ext = $this->getExtensionFromFormat($format, $this->config['default_output_format']);
-                } else {
+                }
+                // action has no explicit output format
+                else {
                     $format = FALSE;
                 }
 
-                // without extension
-                if ($format === FALSE || $format == $this->config['default_output_format']) {
-                    $this->_api->app->$method($route,
-                        function(Request $request) use ($self, $controller_name, $action) {
-                            return $self->callController($request, $controller_name, $action, $self->config['default_output_format']);
-                        }
-                    );
-                }
-
+                // no explicit format set, using all
                 if ($format === FALSE) {
                     // with extension
-                    $this->_api->app->$method($route . '.{ext}',
+                    $_route = $this->_api->app->$method($route . '.{ext}',
                         function(Request $request, $ext) use ($self, $controller_name, $action) {
                             $format = $this->getFormatFromExtension($ext, $self->config['default_output_format']);
                             return $self->callController($request, $controller_name, $action, $format);
                         }
                     );
+                // explicit format set, using only that
                 } else {
-                    // with fixed format
-                    $this->_api->app->$method($route . '.' . $ext,
+                    $_route = $this->_api->app->$method($route . '.' . $ext,
                         function(Request $request) use ($self, $controller_name, $action, $format) {
                             return $self->callController($request, $controller_name, $action, $format);
                         }
                     );
+                }
+
+                // add route asserts if any
+                if (isset($options['route_asserts'])) {
+                    foreach($options['route_asserts'] as $assert) {
+                        $_route->assert($assert[0], $assert[1]);
+                    }
+                }
+
+                // without extension
+                if ($format === FALSE || $format == $this->config['default_output_format']) {
+                    $_route = $this->_api->app->$method($route,
+                        function(Request $request) use ($self, $controller_name, $action) {
+                            return $self->callController($request, $controller_name, $action, $self->config['default_output_format']);
+                        }
+                    );
+
+                    // add route asserts if any
+                    if (isset($options['route_asserts'])) {
+                        foreach($options['route_asserts'] as $assert) {
+                            $_route->assert($assert[0], $assert[1]);
+                        }
+                    }
                 }
             }
         }

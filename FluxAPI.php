@@ -3,11 +3,18 @@ namespace Plugins\FluxAPI;
 
 class FluxAPI extends \FluxAPI\Plugin
 {
+    public static $rest;
+
     public static function register(\FluxAPI\Api $api)
     {
         self::_registerValidators($api);
         self::_registerRest($api);
         self::_registerModelEvents($api);
+    }
+
+    public static function getRest()
+    {
+        return self::$rest;
     }
 
     protected static function _registerValidators(\FluxAPI\Api $api)
@@ -23,7 +30,7 @@ class FluxAPI extends \FluxAPI\Plugin
         // do not enable REST when it's disabled in plugin.options
         if (!in_array('FluxAPI/Rest',$api->config['plugin.options']['disabled'])) {
             // create RESTfull webservice
-            $rest = new Rest($api);
+            self::$rest = new Rest($api);
         }
     }
 
