@@ -8,7 +8,6 @@ class Core extends \FluxAPI\Plugin
     public static function register(\FluxAPI\Api $api)
     {
         self::_registerValidators($api);
-        self::_registerRest($api);
         self::_registerModelEvents($api);
     }
 
@@ -22,15 +21,6 @@ class Core extends \FluxAPI\Plugin
         // register validator service if not present yet
         if (!isset($api->app['validator'])) {
             $api->app->register(new \Silex\Provider\ValidatorServiceProvider());
-        }
-    }
-
-    protected static function _registerRest(\FluxAPI\Api $api)
-    {
-        // do not enable REST when it's disabled in plugin.options
-        if (!in_array('FluxAPI/Rest',$api->config['plugin.options']['disabled'])) {
-            // create RESTfull webservice
-            self::$rest = new Rest($api);
         }
     }
 

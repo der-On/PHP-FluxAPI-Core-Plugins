@@ -52,5 +52,4 @@ The plugins contain:
 
 ## Various
 
-- RESTfull routing
 - automaticly updating createdAt and updatedAt fields of any model extending the Plugins\FluxAPI\Model
