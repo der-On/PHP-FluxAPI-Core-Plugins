@@ -1,6 +1,6 @@
 <?php
 
-namespace Plugins\FluxAPI;
+namespace Plugins\FluxAPI\Core;
 
 use \FluxAPI\Field;
 

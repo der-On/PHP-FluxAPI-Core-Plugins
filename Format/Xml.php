@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-namespace Plugins\FluxAPI\Format;
+namespace Plugins\FluxAPI\Core\Format;
 
 class Xml extends \FluxAPI\Format
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Plugins\FluxAPI\Format;
+namespace Plugins\FluxAPI\Core\Format;
 
 class Json extends \FluxAPI\Format
 {

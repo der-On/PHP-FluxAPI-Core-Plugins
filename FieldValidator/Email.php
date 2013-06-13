@@ -1,5 +1,5 @@
 <?php
-namespace Plugins\FluxAPI\FieldValidator;
+namespace Plugins\FluxAPI\Core\FieldValidator;
 
 use \Symfony\Component\Validator\Constraints as Assert;
 

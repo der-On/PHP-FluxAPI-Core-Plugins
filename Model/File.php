@@ -7,11 +7,11 @@
  * To change this template use File | Settings | File Templates.
  */
 
-namespace Plugins\FluxAPI\Model;
+namespace Plugins\FluxAPI\Core\Model;
 
 use \FluxAPI\Field;
 
-class File extends \Plugins\FluxAPI\Model
+class File extends \Plugins\FluxAPI\Core\Model
 {
     public function defineFields()
     {
@@ -48,6 +48,11 @@ class File extends \Plugins\FluxAPI\Model
             ->addField(new Field(array(
                 'name' => 'size',
                 'type' => Field::TYPE_INTEGER,
+            )))
+            ->addField(new Field(array(
+                'name' => 'weight',
+                'type' => Field::TYPE_INTEGER,
+                'default' => 0,
             )))
             ;
     }

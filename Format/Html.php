@@ -1,5 +1,5 @@
 <?php
-namespace Plugins\FluxAPI\Format;
+namespace Plugins\FluxAPI\Core\Format;
 
 
 class Html extends Xml

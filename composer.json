@@ -1,5 +1,5 @@
 {
-  "name": "flux-api/plugins/flux-api",
+  "name": "flux-api/plugins/core",
   "license": "GPL-3.0+",
   "version": "0.1",
   "description": "Core plugins for the flux-api",
@@ -10,6 +10,6 @@
     "symfony/validator": "~2.3"
   },
   "extra": {
-    "installer-name": "FluxAPI"
+    "installer-name": "FluxAPI/Core"
   }
 }

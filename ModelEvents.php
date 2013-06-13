@@ -1,5 +1,5 @@
 <?php
-namespace Plugins\FluxAPI;
+namespace Plugins\FluxAPI\Core;
 
 use \FluxAPI\Event\ModelEvent;
 
@@ -11,7 +11,7 @@ class ModelEvents
         $api->on(ModelEvent::CREATE, function(ModelEvent $event) {
             $model = $event->getModel();
 
-            if (!empty($model) && is_subclass_of($model, '\\Plugins\\FluxAPI\\Model') && $model->isNew()) {
+            if (!empty($model) && is_subclass_of($model, '\\Plugins\\FluxAPI\\Core\\Model') && $model->isNew()) {
                 $now = new \DateTime();
                 $model->createdAt = $now;
             }
@@ -20,7 +20,7 @@ class ModelEvents
         $api->on(ModelEvent::BEFORE_SAVE, function(ModelEvent $event) {
             $model = $event->getModel();
 
-            if (!empty($model) && is_subclass_of($model, '\\Plugins\\FluxAPI\\Model')) {
+            if (!empty($model) && is_subclass_of($model, '\\Plugins\\FluxAPI\\Core\\Model')) {
                 $now = new \DateTime();
                 $model->updatedAt = $now;
             }
@@ -34,7 +34,7 @@ class ModelEvents
             if ($model_class) {
                 $model = new $model_class($api);
 
-                if (is_subclass_of($model, '\\Plugins\\FluxAPI\\Model')) {
+                if (is_subclass_of($model, '\\Plugins\\FluxAPI\\Core\\Model')) {
                     $event->getQuery()->setDataField('updatedAt', new \DateTime());
                 }
             }

@@ -1,5 +1,5 @@
 <?php
-namespace Plugins\FluxAPI\Permission;
+namespace Plugins\FluxAPI\Core\Permission;
 
 
 class User extends \FluxAPI\Permission

@@ -1,9 +1,9 @@
 <?php
-namespace Plugins\FluxAPI\Model;
+namespace Plugins\FluxAPI\Core\Model;
 
 use \FluxAPI\Field;
 
-class Node extends \Plugins\FluxAPI\Model
+class Node extends \Plugins\FluxAPI\Core\Model
 {
     public function defineFields()
     {

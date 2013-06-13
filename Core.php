@@ -1,7 +1,7 @@
 <?php
-namespace Plugins\FluxAPI;
+namespace Plugins\FluxAPI\Core;
 
-class FluxAPI extends \FluxAPI\Plugin
+class Core extends \FluxAPI\Plugin
 {
     public static $rest;
 

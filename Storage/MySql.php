@@ -1,5 +1,5 @@
 <?php
-namespace Plugins\FluxAPI\Storage;
+namespace Plugins\FluxAPI\Core\Storage;
 
 use \FluxAPI\Query;
 use \FluxAPI\Field;
@@ -14,7 +14,7 @@ class MySql extends \FluxAPI\Storage
         parent::__construct($api, $config);
 
         if (!\Doctrine\DBAL\Types\Type::hasType('varbinary')) {
-            \Doctrine\DBAL\Types\Type::addType('varbinary', 'Plugins\FluxAPI\DbalTypeVarbinary');
+            \Doctrine\DBAL\Types\Type::addType('varbinary', 'Plugins\FluxAPI\Core\DbalTypeVarbinary');
         }
     }
 

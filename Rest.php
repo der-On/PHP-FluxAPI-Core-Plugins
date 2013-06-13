@@ -1,5 +1,5 @@
 <?php
-namespace Plugins\FluxAPI;
+namespace Plugins\FluxAPI\Core;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

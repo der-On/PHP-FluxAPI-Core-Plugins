@@ -1,7 +1,7 @@
 <?php
 require_once "PHPUnit/Framework/TestCase.php";
 
-$loader = require __DIR__ . '/../../../vendor/autoload.php';
+$loader = require __DIR__ . '/../../../../vendor/autoload.php';
 
 abstract class FluxApi_TestCase extends PHPUnit_Framework_TestCase
 {

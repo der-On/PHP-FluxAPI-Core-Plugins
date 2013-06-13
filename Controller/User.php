@@ -1,6 +1,6 @@
 <?php
 
-namespace Plugins\FluxAPI\Controller;
+namespace Plugins\FluxAPI\Core\Controller;
 
 use Doctrine\Common\Proxy\Exception\InvalidArgumentException;
 use FluxAPI\Query;

@@ -1,10 +1,10 @@
 <?php
 
-namespace Plugins\FluxAPI\Model;
+namespace Plugins\FluxAPI\Core\Model;
 
 use \FluxAPI\Field;
 
-class User extends \Plugins\FluxAPI\Model
+class User extends \Plugins\FluxAPI\Core\Model
 {
     public function defineFields()
     {
