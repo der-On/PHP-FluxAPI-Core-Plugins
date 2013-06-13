@@ -40,7 +40,7 @@ class File extends \Plugins\FluxAPI\Core\Model
             ->addField(new Field(array(
                 'name' => 'mimetype',
                 'type' => Field::TYPE_STRING,
-                'length' => 4,
+                'length' => 64,
                 'default' => 'text',
                 'validators' => array('Required'),
             )))
