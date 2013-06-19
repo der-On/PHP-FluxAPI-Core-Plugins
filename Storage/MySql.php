@@ -263,6 +263,15 @@ class MySql extends \FluxAPI\Storage
                     ->filter('equal',array('id' , $foreign_rel_table_name . '.' . $foreign_field_name, 'field'));
             }
 
+            // add ordering if any
+            if ($field->relationOrder && is_array($field->relationOrder)) {
+                foreach($field->relationOrder as $key => $sort) {
+                    if (in_array($sort, array(Field::ORDER_ASC, Field::ORDER_DESC))) {
+                        $query->filter('order', array($key, $sort));
+                    }
+                }
+            }
+
             $models = $this->load($rel_model_name, $query);
 
             if (in_array($field->relationType,array(Field::BELONGS_TO_ONE, Field::HAS_ONE))) {
