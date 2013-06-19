@@ -37,7 +37,8 @@ class User extends \Plugins\FluxAPI\Core\Model
             'name' => 'usergroups',
             'type' => Field::TYPE_RELATION,
             'relationType' => Field::BELONGS_TO_MANY,
-            'relationModel' => 'UserGroup'
+            'relationModel' => 'UserGroup',
+            'relationField' => 'users',
         )));
     }
 }

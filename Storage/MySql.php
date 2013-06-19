@@ -240,17 +240,28 @@ class MySql extends \FluxAPI\Storage
             $id = $model->id;
             $model_name = $model->getModelName();
             $rel_model_name = $field->relationModel;
-            $id_field_name = strtolower($model_name).'_id';
-
-            $table_name = $this->getTableName($model_name);
-            $rel_table_name = $this->getTableName($rel_model_name);
-            $relation_table = $this->getRelationTableName($model_name);
-
-            $rel_field_name = $field->name.'_id';
+            $foreign_table_name = $this->getTableName($rel_model_name); // name of the foreign model table
 
             $query = new Query();
-            $query->filter('join',array('left', $rel_table_name, $relation_table, $relation_table.'.'.$id_field_name.'='.$this->uuidToHex($id)))
-                  ->filter('equal',array('id' , $relation_table.'.'.$rel_field_name, 'field'));
+
+            // look for ids in own relations table
+            if (in_array($field->relationType, array(Field::HAS_MANY, Field::HAS_ONE))) {
+                $id_field_name = strtolower($model_name) . '_id'; // own ID field in own relations table
+                $rel_table_name = $this->getRelationTableName($model_name); // name of own relations table
+                $foreign_field_name = $field->name . '_id'; // name of foreign id field in own relations table
+
+                $query->filter('join',array('left', $foreign_table_name, $rel_table_name, $rel_table_name . '.' . $id_field_name . '=' . $this->uuidToHex($id)))
+                    ->filter('equal',array('id' , $rel_table_name.'.'.$foreign_field_name, 'field'));
+            }
+            // look for ids in foreign relations table
+            elseif (in_array($field->relationType, array(Field::BELONGS_TO_MANY, Field::BELONGS_TO_ONE))) {
+                $foreign_rel_table_name = $this->getRelationTableName($rel_model_name); // name of the foreign relations table
+                $foreign_field_name = strtolower($rel_model_name) . '_id'; // foreign ID field in foreign relations table
+                $id_field_name = $field->relationField . '_id'; // own ID field in foreign relations table
+
+                $query->filter('join',array('left', $foreign_table_name, $foreign_rel_table_name, $foreign_rel_table_name . '.' . $id_field_name . '=' . $this->uuidToHex($id)))
+                    ->filter('equal',array('id' , $foreign_rel_table_name . '.' . $foreign_field_name, 'field'));
+            }
 
             $models = $this->load($rel_model_name, $query);
 
@@ -258,7 +269,7 @@ class MySql extends \FluxAPI\Storage
                 if (count($models) > 0) {
                     return $models[0];
                 } else {
-                    return NULL;
+                    return null;
                 }
             } else {
                 return $models;
@@ -269,22 +280,36 @@ class MySql extends \FluxAPI\Storage
 
     public function addRelation(\FluxAPI\Model $model, \FluxAPI\Model $relation, \FluxAPI\Field $field)
     {
-        $model_name = $model->getModelName();
-        $rel_table = $this->getRelationTableName($model_name); // get the table name of the relations table
-        $model_field_name = $this->getCollectionName($model_name).'_id';
-        $rel_field_name = $field->name.'_id';
-
         $connection = $this->getConnection();
 
+        $model_name = $model->getModelName();
+        $rel_model_name = $field->relationModel;
+        $rel_table_name = $this->getRelationTableName($model_name); // get the table name of the relations table
+
         // before a new record is inserted we need to check if it's not related already
-        $sql = 'SELECT COUNT('.$rel_field_name.') FROM '.$rel_table.' WHERE '.$model_field_name.'='.$this->uuidToHex($model->id).' AND '.$rel_field_name.'='.$this->uuidToHex($relation->id);
-
-        $result = $connection->query($sql)->fetch();
-
-        $count = intval($result['COUNT('.$rel_field_name.')']);
+        if (in_array($field->relationType, array(Field::HAS_MANY, Field::HAS_ONE))) {
+            $id_field_name = $this->getCollectionName($model_name).'_id'; // own ID field in own relations table
+            $foreign_field_name = $field->name . '_id'; // ID field of the foreign model in own relations table
+            $sql = 'SELECT COUNT('. $foreign_field_name .') FROM ' . $rel_table_name . ' WHERE ' . $id_field_name . '=' . $this->uuidToHex($model->id) . ' AND ' . $foreign_field_name . '=' . $this->uuidToHex($relation->id);
+            $result = $connection->query($sql)->fetch();
+            $count = intval($result['COUNT(' . $foreign_field_name . ')']);
+        }
+        elseif (in_array($field->relationType, array(Field::BELONGS_TO_MANY, Field::BELONGS_TO_ONE))) {
+            $foreign_rel_table_name = $this->getRelationTableName($rel_model_name); // foreign relations table name
+            $foreign_rel_field_name = $field->relationField . '_id'; // own ID field in foreign relations table
+            $foreign_id_field_name = $this->getCollectionName($rel_model_name) . '_id'; // foreign ID field in foreign relations table
+            $sql = 'SELECT COUNT(' . $foreign_id_field_name . ') FROM ' . $foreign_rel_table_name . ' WHERE ' . $foreign_rel_field_name . '=' . $this->uuidToHex($model->id) . ' AND ' . $foreign_id_field_name . '=' . $this->uuidToHex($relation->id);
+            $result = $connection->query($sql)->fetch();
+            $count = intval($result['COUNT(' . $foreign_id_field_name . ')']);
+        }
 
         if ($count == 0) {
-            $sql = 'INSERT INTO '.$rel_table.' ('.$model_field_name.','.$rel_field_name.') VALUES('.$this->uuidToHex($model->id).','.$this->uuidToHex($relation->id).')';
+            if (in_array($field->relationType, array(Field::HAS_MANY, Field::HAS_ONE))) {
+                $sql = 'INSERT INTO ' . $rel_table_name . ' (' . $id_field_name . ',' . $foreign_field_name . ') VALUES(' . $this->uuidToHex($model->id) . ',' . $this->uuidToHex($relation->id) . ')';
+            }
+            elseif (in_array($field->relationType, array(Field::BELONGS_TO_MANY, Field::BELONGS_TO_ONE))) {
+                $sql = 'INSERT INTO ' . $foreign_rel_table_name . ' (' . $foreign_rel_field_name . ',' . $foreign_id_field_name . ') VALUES(' . $this->uuidToHex($model->id) . ',' . $this->uuidToHex($relation->id) . ')';
+            }
 
             if ($this->config['debug_sql']) {
                 print("\nSQL: ".$sql."\n");
@@ -296,14 +321,24 @@ class MySql extends \FluxAPI\Storage
 
     public function removeRelation(\FluxAPI\Model $model, \FluxAPI\Model $relation, \FluxAPI\Field $field)
     {
-        $model_name = $model->getModelName();
-        $rel_table = $this->getRelationTableName($model_name); // get the table name of the relations table
-        $model_field_name = $this->getCollectionName($model_name).'_id';
-        $rel_field_name = $field->name.'_id';
-
         $connection = $this->getConnection();
 
-        $sql = 'DELETE FROM '.$rel_table.' WHERE '.$model_field_name.'='.$this->uuidToHex($model->id).' AND '.$rel_field_name.'='.$this->uuidToHex($relation->id);
+        $model_name = $model->getModelName();
+
+        if (in_array($field->relationType, array(Field::HAS_MANY, Field::HAS_ONE))) {
+            $rel_table_name = $this->getRelationTableName($model_name); // own relations table
+            $id_field_name = $this->getCollectionName($model_name) . '_id'; // own ID field in own relations table
+            $foreign_field_name = $field->name . '_id'; // foreign ID field in own relations table
+
+            $sql = 'DELETE FROM ' . $rel_table_name . ' WHERE ' . $id_field_name . '=' . $this->uuidToHex($model->id) . ' AND ' . $foreign_field_name . '=' . $this->uuidToHex($relation->id);
+        }
+        elseif (in_array($field->relationType, array(Field::BELONGS_TO_MANY, Field::BELONGS_TO_ONE))) {
+            $foreign_rel_field_name = $field->relationField . '_id'; // own ID field in foreign relations table
+            $foreign_id_field_name = $this->getCollectionName($field->relationModel) . '_id'; // foreign ID field in foreign relations table
+            $foreign_rel_table_name = $this->getRelationTableName($field->relationModel); // foreign relations table
+
+            $sql = 'DELETE FROM ' . $foreign_rel_table_name . ' WHERE ' . $foreign_rel_field_name . '=' . $this->uuidToHex($model->id) . ' AND ' . $foreign_id_field_name . '=' . $this->uuidToHex($relation->id);
+        }
 
         if ($this->config['debug_sql']) {
             print("\nSQL: ".$sql."\n");
@@ -315,20 +350,38 @@ class MySql extends \FluxAPI\Storage
     public function removeAllRelations(\FluxAPI\Model $model, \FluxAPI\Field $field, array $exclude_ids = array())
     {
         $model_name = $model->getModelName();
-        $rel_table = $this->getRelationTableName($model_name); // get the table name of the relations table
-        $model_field_name = $this->getCollectionName($model_name).'_id';
-        $rel_field_name = $field->name.'_id';
 
         $connection = $this->getConnection();
 
-        $sql = 'DELETE FROM '.$rel_table.' WHERE '.$model_field_name.'='.$this->uuidToHex($model->id).' AND '.$rel_field_name.'!=""';
+        if (in_array($field->relationType, array(Field::HAS_MANY, Field::HAS_ONE))) {
+            $rel_table = $this->getRelationTableName($model_name); // own relations table
+            $id_field_name = $this->getCollectionName($model_name) . '_id'; // own ID field in own relations table
+            $rel_field_name = $field->name . '_id'; // foreign ID field in own relations table
 
-        foreach($exclude_ids as $i => $id) {
-            $exclude_ids[$i] = $this->uuidToHex($id);
+            $sql = 'DELETE FROM ' . $rel_table . ' WHERE ' . $id_field_name . '=' . $this->uuidToHex($model->id) . ' AND ' . $rel_field_name . '!=""';
+
+            foreach($exclude_ids as $i => $id) {
+                $exclude_ids[$i] = $this->uuidToHex($id);
+            }
+
+            if (count($exclude_ids) > 0) {
+                $sql .= ' AND ' . $rel_field_name . ' NOT IN (' . implode(',', $exclude_ids) . ')';
+            }
         }
+        elseif (in_array($field->relationType, array(Field::BELONGS_TO_MANY, Field::BELONGS_TO_ONE))) {
+            $foreign_rel_table_name = $this->getRelationTableName($field->relationModel); // foreign relations table
+            $foreign_id_field_name = $this->getCollectionName($field->relationModel) . '_id'; // foreign ID field in foreign relations table
+            $foreign_rel_field_name = $field->relationField . '_id'; // own ID field in foreign relations table
 
-        if (count($exclude_ids) > 0) {
-            $sql .= ' AND '.$rel_field_name.' NOT IN ('.implode(',',$exclude_ids).')';
+            $sql = 'DELETE FROM ' . $foreign_rel_table_name . ' WHERE ' . $foreign_rel_field_name . '=' . $this->uuidToHex($model->id) . ' AND ' . $foreign_id_field_name . '!=""';
+
+            foreach($exclude_ids as $i => $id) {
+                $exclude_ids[$i] = $this->uuidToHex($id);
+            }
+
+            if (count($exclude_ids) > 0) {
+                $sql .= ' AND ' . $foreign_id_field_name . ' NOT IN (' . implode(',', $exclude_ids) . ')';
+            }
         }
 
         if ($this->config['debug_sql']) {
@@ -596,7 +649,11 @@ class MySql extends \FluxAPI\Storage
                         if ($field->primary) {
                             $primary[] = $field->name;
                         }
-                    } elseif($field->type == Field::TYPE_RELATION && !empty($field->relationModel)) { // add relation model id field to relation table
+                    }
+                    // add relation model id field to relation table
+                    elseif ($field->type == Field::TYPE_RELATION  &&
+                            !empty($field->relationModel) &&
+                            in_array($field->relationType, array(Field::HAS_MANY, Field::HAS_ONE))) {
                         // we need the id field of the related model so we can create a matching field in the relation table
                         $rel_id_field = $this->getRelationField($field);
 
