@@ -43,7 +43,7 @@ class MySql extends \FluxAPI\Storage
         $isField = (isset($params[2]) && $params[2] == 'field');
         $isId = (!$isField && $params[0] == 'id' || substr($params[0],-3) == '_id');
 
-        if ($isId) {
+        if (!$isField && $isId) {
             $params[1] = $this->uuidToHex($params[1]);
             $type = 'varbinary';
         } else {
