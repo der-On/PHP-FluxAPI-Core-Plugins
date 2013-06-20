@@ -30,9 +30,11 @@ The plugins contain:
 
 - Required
 - Email
+- Alias: creates URL-safe aliases, can also use another field's value to create the alias
+- Url
+- StripTags: removes tags
 - MinLength (planned)
 - MaxLength (planned)
-- Url (planned)
 - Min (planned)
 - Max (planned)
 - Date (planned)
@@ -43,7 +45,7 @@ The plugins contain:
 
 ## Controllers
 
-- User: adds login/logout actions (in progress)
+- User: adds login/logout actions
 
 ## Permissions
 
