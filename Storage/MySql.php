@@ -56,7 +56,17 @@ class MySql extends \FluxAPI\Storage
 
     public function filterNotEqual(&$qb, array $params)
     {
-        $qb->andWhere($qb->expr()->neq($params[0],$params[1]));
+        $isField = (isset($params[2]) && $params[2] == 'field');
+        $isId = (!$isField && $params[0] == 'id' || substr($params[0],-3) == '_id');
+
+        if (!$isField && $isId) {
+            $params[1] = $this->uuidToHex($params[1]);
+            $type = 'varbinary';
+        } else {
+            $type = (isset($params[2]))?$params[2]:'string';
+        }
+
+        $qb->andWhere($qb->expr()->neq($params[0],($type!='string')?$params[1]:$qb->expr()->literal($params[1])));
         return $qb;
     }
 
