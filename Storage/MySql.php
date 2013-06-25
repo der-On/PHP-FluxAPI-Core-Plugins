@@ -293,7 +293,8 @@ class MySql extends \FluxAPI\Storage
                 }
             }
 
-            $models = $this->load($rel_model_name, $query);
+            $loadMethod = 'load' . $rel_model_name . 's';
+            $models = $this->_api->$loadMethod($query);
 
             if (in_array($field->relationType,array(Field::BELONGS_TO_ONE, Field::HAS_ONE))) {
                 if (count($models) > 0) {
