@@ -285,6 +285,8 @@ class MySql extends \FluxAPI\Storage
                 }
             }
         }
+
+        return $query;
     }
 
     public function loadRelation(\FluxAPI\Model $model, $name)
@@ -297,7 +299,7 @@ class MySql extends \FluxAPI\Storage
 
         if ($field->type == Field::TYPE_RELATION && !empty($field->relationModel)) {
             $query = $this->_getLoadRelationQuery($model, $name);
-            $models = $this->_api->load($query);
+            $models = $this->_api->load($field->relationModel, $query);
 
             if (in_array($field->relationType,array(Field::BELONGS_TO_ONE, Field::HAS_ONE))) {
                 if (count($models) > 0) {
@@ -358,7 +360,6 @@ class MySql extends \FluxAPI\Storage
         $query = $this->_getLoadRelationQuery($model, $name);
         $source = new \FluxAPI\Cache\ModelSource($model->getModelName(), $query);
         $this->_api['caches']->remove(\FluxAPI\Cache::TYPE_MODEL, $source);
-
     }
 
     public function removeRelation(\FluxAPI\Model $model, \FluxAPI\Model $relation, \FluxAPI\Field $field)
