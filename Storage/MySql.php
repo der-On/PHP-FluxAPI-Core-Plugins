@@ -244,6 +244,49 @@ class MySql extends \FluxAPI\Storage
         return $result['LAST_INSERT_ID()'];
     }
 
+    protected function _getLoadRelationQuery(\FluxAPI\Model $model, $name)
+    {
+        $field = $model->getField($name);
+
+        $id = $model->id;
+        $model_name = $model->getModelName();
+        $rel_model_name = $field->relationModel;
+        $foreign_table_name = $this->getTableName($rel_model_name); // name of the foreign model table
+
+        $query = new Query();
+
+        // look for ids in own relations table
+        if (in_array($field->relationType, array(Field::HAS_MANY, Field::HAS_ONE))) {
+            $id_field_name = strtolower($model_name) . '_id'; // own ID field in own relations table
+            $rel_table_name = $this->getRelationTableName($model_name); // name of own relations table
+
+            $query
+                ->filter('join',array('left', $foreign_table_name, $rel_table_name, $rel_table_name . '.field="' . $field->name . '" AND ' . $rel_table_name . '.' . $id_field_name . '=' . $this->uuidToHex($id)))
+                ->filter('equal',array('id' , $rel_table_name . '.foreign_id', 'field'))
+            ;
+        }
+        // look for ids in foreign relations table
+        elseif (in_array($field->relationType, array(Field::BELONGS_TO_MANY, Field::BELONGS_TO_ONE))) {
+            $foreign_rel_table_name = $this->getRelationTableName($rel_model_name); // name of the foreign relations table
+            $foreign_id_field_name = strtolower($rel_model_name) . '_id';
+            $id_field_name = $field->relationField . '_id'; // own ID field in foreign relations table
+
+            $query
+                ->filter('join',array('left', $foreign_table_name, $foreign_rel_table_name, $foreign_rel_table_name . '.field="' . $field->relationField . '" AND ' . $foreign_rel_table_name . '.foreign_id=' . $this->uuidToHex($id)))
+                ->filter('equal',array('id' , $foreign_rel_table_name . '.' . $foreign_id_field_name, 'field'))
+            ;
+        }
+
+        // add ordering if any
+        if ($field->relationOrder && is_array($field->relationOrder)) {
+            foreach($field->relationOrder as $key => $sort) {
+                if (in_array($sort, array(Field::ORDER_ASC, Field::ORDER_DESC))) {
+                    $query->filter('order', array($key, $sort));
+                }
+            }
+        }
+    }
+
     public function loadRelation(\FluxAPI\Model $model, $name)
     {
         if (!$model->hasField($name)) {
@@ -253,48 +296,8 @@ class MySql extends \FluxAPI\Storage
         }
 
         if ($field->type == Field::TYPE_RELATION && !empty($field->relationModel)) {
-            $id = $model->id;
-            $model_name = $model->getModelName();
-            $rel_model_name = $field->relationModel;
-            $foreign_table_name = $this->getTableName($rel_model_name); // name of the foreign model table
-
-            $query = new Query();
-
-            //var_dump($field);
-
-            // look for ids in own relations table
-            if (in_array($field->relationType, array(Field::HAS_MANY, Field::HAS_ONE))) {
-                $id_field_name = strtolower($model_name) . '_id'; // own ID field in own relations table
-                $rel_table_name = $this->getRelationTableName($model_name); // name of own relations table
-
-                $query
-                    ->filter('join',array('left', $foreign_table_name, $rel_table_name, $rel_table_name . '.field="' . $field->name . '" AND ' . $rel_table_name . '.' . $id_field_name . '=' . $this->uuidToHex($id)))
-                    ->filter('equal',array('id' , $rel_table_name . '.foreign_id', 'field'))
-                    ;
-            }
-            // look for ids in foreign relations table
-            elseif (in_array($field->relationType, array(Field::BELONGS_TO_MANY, Field::BELONGS_TO_ONE))) {
-                $foreign_rel_table_name = $this->getRelationTableName($rel_model_name); // name of the foreign relations table
-                $foreign_id_field_name = strtolower($rel_model_name) . '_id';
-                $id_field_name = $field->relationField . '_id'; // own ID field in foreign relations table
-
-                $query
-                    ->filter('join',array('left', $foreign_table_name, $foreign_rel_table_name, $foreign_rel_table_name . '.field="' . $field->relationField . '" AND ' . $foreign_rel_table_name . '.foreign_id=' . $this->uuidToHex($id)))
-                    ->filter('equal',array('id' , $foreign_rel_table_name . '.' . $foreign_id_field_name, 'field'))
-                    ;
-            }
-
-            // add ordering if any
-            if ($field->relationOrder && is_array($field->relationOrder)) {
-                foreach($field->relationOrder as $key => $sort) {
-                    if (in_array($sort, array(Field::ORDER_ASC, Field::ORDER_DESC))) {
-                        $query->filter('order', array($key, $sort));
-                    }
-                }
-            }
-
-            $loadMethod = 'load' . $rel_model_name . 's';
-            $models = $this->_api->$loadMethod($query);
+            $query = $this->_getLoadRelationQuery($model, $name);
+            $models = $this->_api->load($query);
 
             if (in_array($field->relationType,array(Field::BELONGS_TO_ONE, Field::HAS_ONE))) {
                 if (count($models) > 0) {
@@ -350,8 +353,19 @@ class MySql extends \FluxAPI\Storage
         }
     }
 
+    protected function _removeCachedRelations(\FluxAPI\Model $model, $name)
+    {
+        $query = $this->_getLoadRelationQuery($model, $name);
+        $source = new \FluxAPI\Cache\ModelSource($model->getModelName(), $query);
+        $this->_api['caches']->remove(\FluxAPI\Cache::TYPE_MODEL, $source);
+
+    }
+
     public function removeRelation(\FluxAPI\Model $model, \FluxAPI\Model $relation, \FluxAPI\Field $field)
     {
+        // remove cached relations
+        $this->_removeCachedRelations($model, $field->name);
+
         $connection = $this->getConnection();
 
         $model_name = $model->getModelName();
@@ -378,6 +392,9 @@ class MySql extends \FluxAPI\Storage
 
     public function removeAllRelations(\FluxAPI\Model $model, \FluxAPI\Field $field, array $exclude_ids = array())
     {
+        // remove cached relations
+        $this->_removeCachedRelations($model, $field->name);
+
         $model_name = $model->getModelName();
 
         $connection = $this->getConnection();

@@ -86,7 +86,7 @@ class MemoryModelCache extends \FluxAPI\Cache
     public function clear($type)
     {
         if ($type == Cache::TYPE_MODEL) {
-            $this->_driver->deleteAll();
+            $this->_driver->flushAll();
         }
     }
 }
