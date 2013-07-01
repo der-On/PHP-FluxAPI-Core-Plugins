@@ -44,13 +44,11 @@ class MemoryModelCache extends \FluxAPI\Cache
     {
         if ($type == Cache::TYPE_MODEL) {
             // convert to array
-            if (!is_array($resource)) {
-                $resource = array($resource->toArray());
+            if (\FluxAPI\Collection\ModelCollection::isCollection($resource)) {
+                $resource = $resource->toArray(true);
             }
             else {
-                foreach($resource as $i => $instance) {
-                    $resource[$i] = $resource[$i]->toArray();
-                }
+                $resource = array($resource->toArray());
             }
 
             if (!empty($source->query)) {
