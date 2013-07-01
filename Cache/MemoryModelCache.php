@@ -24,16 +24,16 @@ class MemoryModelCache extends \FluxAPI\Cache
             if ($this->_driver->contains($hash)) {
                 $resource = $this->_driver->fetch($hash);
 
-                $createMethod = 'create' . $source->model_name;
+                $instances = new \FluxAPI\Collection\ModelCollection();
 
                 foreach($resource as $i => $data) {
                     $id = $resource[$i]['id'];
-                    $resource[$i] = $this->_api->$createMethod($data);
-                    $resource[$i]->id = $id;
-                    $resource[$i]->notNew();
+                    $instances[$i] = $this->_api->create($source->model_name, $data);
+                    $instances[$i]->id = $id;
+                    $instances[$i]->notNew();
                 }
 
-                return $resource;
+                return $instances;
             }
         }
 
@@ -43,10 +43,6 @@ class MemoryModelCache extends \FluxAPI\Cache
     public function store($type, CacheSource $source, $resource, CacheOptions $options = null)
     {
         if ($type == Cache::TYPE_MODEL) {
-            $hash = $source->toHash();
-
-            $this->_driver->delete($hash);
-
             // convert to array
             if (!is_array($resource)) {
                 $resource = array($resource->toArray());
@@ -57,7 +53,11 @@ class MemoryModelCache extends \FluxAPI\Cache
                 }
             }
 
-            $this->_driver->save($hash, $resource);
+            if (!empty($source->query)) {
+                $hash = $source->toHash();
+                $this->_driver->delete($hash);
+                $this->_driver->save($hash, $resource);
+            }
 
             foreach($resource as $instance) {
                 $hash = $source->model_name . '/' . $instance['id'];

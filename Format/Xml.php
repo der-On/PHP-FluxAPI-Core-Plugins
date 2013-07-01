@@ -60,7 +60,7 @@ class Xml extends \FluxAPI\Format
         return self::encode($model->toArray(),array('root'=>$model_name));
     }
 
-    public static function encodeFromModels($model_name, array $models)
+    public static function encodeFromModels($model_name, \FluxAPI\Collection\ModelCollection $models)
     {
         $xml = '<?xml version="1.0"?>'."\n";
         $xml .= '<'.$model_name.'s>'."\n";

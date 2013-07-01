@@ -44,7 +44,7 @@ class Json extends \FluxAPI\Format
         }
     }
 
-    public static function encodeFromModels($model_name, array $models)
+    public static function encodeFromModels($model_name, \FluxAPI\Collection\ModelCollection $models)
     {
         $_models = array();
 
