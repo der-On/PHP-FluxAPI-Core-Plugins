@@ -302,7 +302,7 @@ class MySql extends \FluxAPI\Storage
             $models = $this->_api->load($field->relationModel, $query);
 
             if (in_array($field->relationType,array(Field::BELONGS_TO_ONE, Field::HAS_ONE))) {
-                if (count($models) > 0) {
+                if ($models->count() > 0) {
                     return $models[0];
                 } else {
                     return null;
