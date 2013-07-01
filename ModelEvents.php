@@ -8,7 +8,7 @@ class ModelEvents
     public static function register(\FluxAPI\Api $api)
     {
         // register listeners for models to update author, updatedAt and createdAt
-        $api->on(ModelEvent::CREATE, function(ModelEvent $event) {
+        $api->on(ModelEvent::BEFORE_SAVE, function(ModelEvent $event) {
             $model = $event->getModel();
 
             if (!empty($model) && is_subclass_of($model, '\\Plugins\\FluxAPI\\Core\\Model') && $model->isNew()) {

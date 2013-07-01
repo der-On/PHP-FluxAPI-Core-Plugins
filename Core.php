@@ -26,7 +26,7 @@ class Core extends \FluxAPI\Plugin
 
     protected static function _registerModelEvents(\FluxAPI\Api $api)
     {
-        if (!in_array('FluxAPI/ModelEvents', $api->config['plugin.options']['disabled'])) {
+        if (!in_array('FluxAPI/Core/ModelEvents', $api->config['plugin.options']['disabled'])) {
             ModelEvents::register($api);
         }
     }
