@@ -11,17 +11,12 @@ class ModelEvents
         $api->on(ModelEvent::BEFORE_SAVE, function(ModelEvent $event) {
             $model = $event->getModel();
 
-            if (!empty($model) && is_subclass_of($model, '\\Plugins\\FluxAPI\\Core\\Model') && $model->isNew()) {
-                $now = new \DateTime();
-                $model->createdAt = $now;
-            }
-        }, \FluxAPI\Api::EARLY_EVENT);
-
-        $api->on(ModelEvent::BEFORE_SAVE, function(ModelEvent $event) {
-            $model = $event->getModel();
-
             if (!empty($model) && is_subclass_of($model, '\\Plugins\\FluxAPI\\Core\\Model')) {
                 $now = new \DateTime();
+
+                if  ($model->isNew()) {
+                    $model->createdAt = $now;
+                }
                 $model->updatedAt = $now;
             }
         }, \FluxAPI\Api::EARLY_EVENT);
