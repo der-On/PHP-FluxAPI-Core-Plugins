@@ -10,6 +10,11 @@ class Url extends \FluxAPI\FieldValidator
         $constraint = new Assert\Url();
         $errors = $this->_api->app['validator']->validateValue($value, $constraint);
 
-        return (count($errors) == 0);
+        if (count($errors) > 0) {
+            $model->addError(new \FluxAPI\Exception\ValidateException(sprintf('The field "%s" is no valid URL.', $field->name)));
+            return false;
+        }
+
+        return true;
     }
 }
