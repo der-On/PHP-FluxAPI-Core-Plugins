@@ -26,6 +26,16 @@ class MySql extends \FluxAPI\Storage
         $this->addFilter('join','filterJoin');
     }
 
+    protected function _where(&$qb, $expr)
+    {
+        if ($this->isFilterOr()) {
+            $qb->orWhere($expr);
+        }
+        else {
+            $qb->andWhere($expr);
+        }
+    }
+
     public function filterSelect(&$qb, array $params)
     {
         $isId = ($params[0] == 'id');
@@ -50,7 +60,8 @@ class MySql extends \FluxAPI\Storage
             $type = (isset($params[2]))?$params[2]:'string';
         }
 
-        $qb->andWhere($qb->expr()->eq($params[0],($type!='string')?$params[1]:$qb->expr()->literal($params[1])));
+        $this->_where($qb, $qb->expr()->eq($params[0], ($type!='string') ? $params[1] : $qb->expr()->literal($params[1])));
+
         return $qb;
     }
 
@@ -66,16 +77,17 @@ class MySql extends \FluxAPI\Storage
             $type = (isset($params[2]))?$params[2]:'string';
         }
 
-        $qb->andWhere($qb->expr()->neq($params[0],($type!='string')?$params[1]:$qb->expr()->literal($params[1])));
+        $this->_where($qb, $qb->expr()->neq($params[0],($type!='string')?$params[1]:$qb->expr()->literal($params[1])));
+
         return $qb;
     }
 
     public function filterGreaterThen(&$qb, array $params)
     {
         if (is_numeric($params[1])) {
-            $qb->andWhere($qb->expr()->gt($params[0], $params[1]));
+            $this->_where($qb, $qb->expr()->gt($params[0], $params[1]));
         } else {
-            $qb->andWhere($qb->expr()->gt($params[0], $qb->expr()->literal($params[1])));
+            $this->_where($qb, $qb->expr()->gt($params[0], $qb->expr()->literal($params[1])));
         }
 
         return $qb;
@@ -84,9 +96,9 @@ class MySql extends \FluxAPI\Storage
     public function filterGreaterThenOrEqual(&$qb, array $params)
     {
         if (is_numeric($params[1])) {
-            $qb->andWhere($qb->expr()->gte($params[0], $params[1]));
+            $this->_where($qb, $qb->expr()->gte($params[0], $params[1]));
         } else {
-            $qb->andWhere($qb->expr()->gte($params[0], $qb->expr()->literal($params[1])));
+            $this->_where($qb, $qb->expr()->gte($params[0], $qb->expr()->literal($params[1])));
         }
         return $qb;
     }
@@ -94,9 +106,9 @@ class MySql extends \FluxAPI\Storage
     public function filterLessThen(&$qb, array $params)
     {
         if (is_numeric($params[1])) {
-            $qb->andWhere($qb->expr()->lt($params[0], $params[1]));
+            $this->_where($qb, $qb->expr()->lt($params[0], $params[1]));
         } else {
-            $qb->andWhere($qb->expr()->lt($params[0], $qb->expr()->literal($params[1])));
+            $this->_where($qb, $qb->expr()->lt($params[0], $qb->expr()->literal($params[1])));
         }
         return $qb;
     }
@@ -104,16 +116,16 @@ class MySql extends \FluxAPI\Storage
     public function filterLessThenOrEqual(&$qb, array $params)
     {
         if (is_numeric($params[1])) {
-            $qb->andWhere($qb->expr()->lte($params[0], $params[1]));
+            $this->_where($qb, $qb->expr()->lte($params[0], $params[1]));
         } else {
-            $qb->andWhere($qb->expr()->lte($params[0], $qb->expr()->literal($params[1])));
+            $this->_where($qb, $qb->expr()->lte($params[0], $qb->expr()->literal($params[1])));
         }
         return $qb;
     }
 
     public function filterRange(&$qb, array $params)
     {
-        $qb->andWhere($qb->expr()->andX(
+        $this->_where($qb, $qb->expr()->andX(
             $qb->expr()->gte($params[0],$params[1]),
             $qb->expr()->lte($params[0],$params[2])
         ));
@@ -141,7 +153,7 @@ class MySql extends \FluxAPI\Storage
 
     public function filterLike(&$qb, array $params)
     {
-        $qb->andWhere($qb->expr()->like($params[0],$params[1]));
+        $this->_where($qb, $qb->expr()->like($params[0], $qb->expr()->literal($params[1])));
         return $qb;
     }
 
@@ -163,7 +175,7 @@ class MySql extends \FluxAPI\Storage
             }
         }
 
-        $qb->andWhere($params[0].' IN ('.$in.')');
+        $this->_where($qb, $params[0].' IN ('.$in.')');
         return $qb;
     }
 
