@@ -10,7 +10,12 @@ class UserGroup extends \Plugins\FluxAPI\Core\Model
     {
         parent::defineFields();
 
-        $this->addField(new Field(array(
+        $this
+        ->addField(new Field(array(
+            'name' => 'title',
+            'type' => Field::TYPE_STRING,
+        )))
+        ->addField(new Field(array(
             'type' => Field::TYPE_ARRAY,
             'name' => 'permissions'
         )))

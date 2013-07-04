@@ -21,7 +21,7 @@ class Object extends \FluxAPI\FieldValidator
 
                 return false;
             }
-            elseif (isset($options['class']) && !is_subclass_of($value, $options['class'])) {
+            elseif (isset($options['class']) && !($value instanceof $options['class'])) {
                 $model->addError(new \FluxAPI\Exception\ValidateException(sprintf('The field "%s" is no instance of "%s".', $field->name, $options['class'])));
 
                 return false;
