@@ -281,7 +281,6 @@ class MySql extends \FluxAPI\Storage
         elseif (in_array($field->relationType, array(Field::BELONGS_TO_MANY, Field::BELONGS_TO_ONE))) {
             $foreign_rel_table_name = $this->getRelationTableName($rel_model_name); // name of the foreign relations table
             $foreign_id_field_name = strtolower($rel_model_name) . '_id';
-            $id_field_name = $field->relationField . '_id'; // own ID field in foreign relations table
 
             $query
                 ->filter('join',array('left', $foreign_table_name, $foreign_rel_table_name, $foreign_rel_table_name . '.field="' . $field->relationField . '" AND ' . $foreign_rel_table_name . '.foreign_id=' . $this->uuidToHex($id)))
@@ -297,6 +296,9 @@ class MySql extends \FluxAPI\Storage
                 }
             }
         }
+
+        $query->setType(Query::TYPE_SELECT);
+        $query->setModelName($rel_model_name);
 
         return $query;
     }
@@ -367,18 +369,14 @@ class MySql extends \FluxAPI\Storage
         }
     }
 
-    protected function _removeCachedRelations(\FluxAPI\Model $model, $name)
+    public function removeCachedRelationModels(\FluxAPI\Model $model, $name)
     {
         $query = $this->_getLoadRelationQuery($model, $name);
-        $source = new \FluxAPI\Cache\ModelSource($model->getModelName(), $query);
-        $this->_api['caches']->remove(\FluxAPI\Cache::TYPE_MODEL, $source);
+        $this->removeCachedModels($model->getModelName(), $query);
     }
 
     public function removeRelation(\FluxAPI\Model $model, \FluxAPI\Model $relation, \FluxAPI\Field $field)
     {
-        // remove cached relations
-        $this->_removeCachedRelations($model, $field->name);
-
         $connection = $this->getConnection();
 
         $model_name = $model->getModelName();
@@ -405,9 +403,6 @@ class MySql extends \FluxAPI\Storage
 
     public function removeAllRelations(\FluxAPI\Model $model, \FluxAPI\Field $field, array $exclude_ids = array())
     {
-        // remove cached relations
-        $this->_removeCachedRelations($model, $field->name);
-
         $model_name = $model->getModelName();
 
         $connection = $this->getConnection();

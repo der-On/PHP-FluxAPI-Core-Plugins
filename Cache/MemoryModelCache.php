@@ -10,30 +10,51 @@ class MemoryModelCache extends \FluxAPI\Cache
     protected $_driver = NULL;
     protected $_driver_class = '\Doctrine\Common\Cache\ArrayCache';
 
+    protected $_options = array(
+        'lifetime' => 0
+    );
+
+    protected function _setOptions()
+    {
+        $plugin_path = str_replace('\\','/', get_class($this));
+        $plugin_path = str_replace('Plugins','', $plugin_path);
+        $plugin_path = ltrim($plugin_path, '/');
+
+        if (isset($this->_api->config['plugin.options'][$plugin_path])) {
+            $this->_options = array_merge($this->_options, $this->_api->config['plugin.options'][$plugin_path]);
+        }
+    }
+
     public function __construct(\FluxAPI\Api $api)
     {
         parent::__construct($api);
         $this->_driver = new $this->_driver_class();
+
+        $this->_setOptions();
     }
 
     public function getCached($type, CacheSource $source, CacheOptions $options = null)
     {
         if ($type == Cache::TYPE_MODEL) {
-            $hash = $source->toHash();
+            if (!empty($source->query)) {
+                $hash = $source->toHash(); // query based hash
 
-            if ($this->_driver->contains($hash)) {
-                $resource = $this->_driver->fetch($hash);
+                if ($this->_driver->contains($hash)) {
+                    $resource = $this->_driver->fetch($hash);
 
-                $instances = new \FluxAPI\Collection\ModelCollection();
+                    $models = new \FluxAPI\Collection\ModelCollection();
 
-                foreach($resource as $i => $data) {
-                    $id = $resource[$i]['id'];
-                    $instances[$i] = $this->_api->create($source->model_name, $data);
-                    $instances[$i]->id = $id;
-                    $instances[$i]->notNew();
+                    foreach($resource as $data) {
+                        $model = $this->_api->create($source->model_name, $data);
+
+                        // api->create will not set the id from the data, so we have to do it
+                        $model->id = $data['id'];
+                        $model->notNew();
+                        $models->push($model);
+                    }
+
+                    return $models;
                 }
-
-                return $instances;
             }
         }
 
@@ -43,24 +64,18 @@ class MemoryModelCache extends \FluxAPI\Cache
     public function store($type, CacheSource $source, $resource, CacheOptions $options = null)
     {
         if ($type == Cache::TYPE_MODEL) {
-            // convert to array
-            if (\FluxAPI\Collection\ModelCollection::isInstance($resource)) {
-                $resource = $resource->toArray(true);
-            }
-            else {
-                $resource = array($resource->toArray());
-            }
-
             if (!empty($source->query)) {
+                // convert to array
+                if (\FluxAPI\Collection\ModelCollection::isInstance($resource)) {
+                    $resource = $resource->toArray(true);
+                }
+                else {
+                    $resource = array($resource->toArray());
+                }
+
                 $hash = $source->toHash();
                 $this->_driver->delete($hash);
                 $this->_driver->save($hash, $resource);
-            }
-
-            foreach($resource as $instance) {
-                $hash = $source->model_name . '/' . $instance['id'];
-                $this->_driver->delete($hash);
-                $this->_driver->save($hash, $instance);
             }
         }
     }
@@ -68,15 +83,11 @@ class MemoryModelCache extends \FluxAPI\Cache
     public function remove($type, CacheSource $source, CacheOptions $options = null)
     {
         if ($type == Cache::TYPE_MODEL) {
-            $hash = $source->toHash();
+            if (!empty($source->query)) {
+                $hash = $source->toHash();
 
-            $this->_driver->delete($hash);
-
-            if (!empty($source->instances)) {
-                foreach($source->instances as $instance) {
-                    $hash = $source->model_name . '/' . $instance->id;
-                    $this->_driver->delete($hash);
-                }
+                // delete query hash
+                $this->_driver->delete($hash);
             }
         }
     }
