@@ -99,8 +99,15 @@ class User extends \FluxAPI\Controller
 
         // temporary allow everything
         $this->_api['permissions']->setAccessOverride(TRUE, 'Model', 'User', 'load');
+
+        // temporary disable model cache
+        $this->_api['caches']->disable('Model');
+
+        // load the user
         $user = $this->_api->loadUser($query);
 
+        // reset temporary changes
+        $this->_api['caches']->enable('Model');
         $this->_api['permissions']->unsetAccessOverride('Model', 'User', 'load');
 
         if ($user) {
