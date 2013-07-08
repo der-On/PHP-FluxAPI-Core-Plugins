@@ -567,7 +567,7 @@ class MySql extends \FluxAPI\Storage
             if ($query->getType() == Query::TYPE_COUNT) {
                 return intval($result[0]['COUNT(id)']);
             } else {
-                $instances = new \FluxAPI\Collection\ModelCollection();
+                $models = new \FluxAPI\Collection\ModelCollection();
 
                 // temporary allow everything
                 $this->_api['permissions']->setAccessOverride(TRUE, 'Model', $model_name, 'create');
@@ -580,13 +580,13 @@ class MySql extends \FluxAPI\Storage
                         }
                     }
 
-                    $instances->push($this->_api['models']->create($model_name, $data, NULL, FALSE));
+                    $models->push($this->_api['models']->create($model_name, $data, NULL, FALSE));
                 }
 
                 // and reset access control
                 $this->_api['permissions']->unsetAccessOverride('Model', $model_name, 'create');
 
-                return $instances;
+                return $models;
             }
         }
 
