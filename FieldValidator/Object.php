@@ -5,13 +5,20 @@ class Object extends \FluxAPI\FieldValidator
 {
     public function validate($value, \FluxAPI\Field $field, \FluxAPI\Model $model, array $options = array())
     {
+        $name = $field->name;
+
         if (!empty($value)) {
-            // value must be converted from an array to the object
-            if (isset($options['class']) && is_array($value) && count(array_keys($value)) > 0) {
+            // model already has an object of that kind so we will add the additional values from the passed array
+            if (!empty($model->$name) && is_object($model->$name) && is_array($value)) {
+                $this->_arrayToObject($value, $model->$name);
+                return true;
+            }
+            // model does not have an object so value must be converted from an array to the object and attached to the model
+            elseif (isset($options['class']) && is_array($value) && count(array_keys($value)) > 0) {
                 $class = $options['class'];
                 $object = new $class();
                 $this->_arrayToObject($value, $object);
-                $name = $field->name;
+
                 $model->$name = $object;
                 return true;
             }
