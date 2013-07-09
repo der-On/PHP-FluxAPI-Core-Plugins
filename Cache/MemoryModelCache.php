@@ -38,13 +38,14 @@ class MemoryModelCache extends \FluxAPI\Cache
         if ($type == Cache::TYPE_MODEL) {
             if (!empty($source->query)) {
                 $hash = $source->toHash(); // query based hash
-
+                ini_set('html_errors','0');
                 if ($this->_driver->contains($hash)) {
                     $resource = $this->_driver->fetch($hash);
 
                     $models = new \FluxAPI\Collection\ModelCollection();
 
                     foreach($resource as $data) {
+                        $data = unserialize($data);
                         $model = $this->_api->create($source->model_name, $data);
 
                         // api->create will not set the id from the data, so we have to do it
@@ -67,10 +68,14 @@ class MemoryModelCache extends \FluxAPI\Cache
             if (!empty($source->query)) {
                 // convert to array
                 if (\FluxAPI\Collection\ModelCollection::isInstance($resource)) {
-                    $resource = $resource->toArray(true);
+                    $resource = $resource->toArray();
                 }
                 else {
-                    $resource = array($resource->toArray());
+                    $resource = array($resource);
+                }
+
+                foreach($resource as $i => $model) {
+                    $resource[$i] = serialize($model->toArray(false));
                 }
 
                 $hash = $source->toHash();
