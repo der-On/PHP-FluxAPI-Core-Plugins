@@ -38,7 +38,7 @@ class MemoryModelCache extends \FluxAPI\Cache
         if ($type == Cache::TYPE_MODEL) {
             if (!empty($source->query)) {
                 $hash = $source->toHash(); // query based hash
-                ini_set('html_errors','0');
+
                 if ($this->_driver->contains($hash)) {
                     $resource = $this->_driver->fetch($hash);
 
