@@ -134,7 +134,13 @@ class MySql extends \FluxAPI\Storage
 
     public function filterOrder(&$qb, array $params)
     {
-        $qb->orderBy($params[0],isset($params[1])?$params[1]:'ASC');
+        $qb->addOrderBy($params[0],isset($params[1])?$params[1]:'ASC');
+        return $qb;
+    }
+
+    public function filterGroup(&$qb, array $params)
+    {
+        $qb->add('groupBy', $params[0] . ' ' . ((isset($params[1]) && $params[1] != Field::ORDER_NONE)? $params[1] : ''));
         return $qb;
     }
 
@@ -293,6 +299,15 @@ class MySql extends \FluxAPI\Storage
             foreach($field->relationOrder as $key => $sort) {
                 if (in_array($sort, array(Field::ORDER_ASC, Field::ORDER_DESC))) {
                     $query->filter('order', array($key, $sort));
+                }
+            }
+        }
+
+        // add grouping if any
+        if ($field->relationGroup && is_array($field->relationGroup)) {
+            foreach($field->relationGroup as $key => $sort) {
+                if (in_array($sort, array(Field::ORDER_ASC, Field::ORDER_DESC, Field::ORDER_NONE))) {
+                    $query->filter('group', array($key, $sort));
                 }
             }
         }

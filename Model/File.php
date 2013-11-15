@@ -1,12 +1,4 @@
 <?php
-/**
- * Created by JetBrains PhpStorm.
- * User: ondrej
- * Date: 09.04.13
- * Time: 13:41
- * To change this template use File | Settings | File Templates.
- */
-
 namespace Plugins\FluxAPI\Core\Model;
 
 use \FluxAPI\Field;
