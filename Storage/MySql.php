@@ -608,6 +608,17 @@ class MySql extends \FluxAPI\Storage
         return NULL;
     }
 
+    public function executeRawQuery($query)
+    {
+        parent::executeRawQuery($query);
+
+        $connection = $this->getConnection();
+
+        $result = $connection->query($query);
+
+        return $result->fetchAll();
+    }
+
     public function getFieldType(\FluxAPI\Field $field)
     {
         switch($field->type) {
