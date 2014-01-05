@@ -48,6 +48,11 @@ class MySql extends \FluxAPI\Storage
         return $qb;
     }
 
+    public function filterRaw(&$qb, array $params)
+    {
+        $qb->andWhere($params[0]);
+    }
+
     public function filterEqual(&$qb, array $params)
     {
         $isField = (isset($params[2]) && $params[2] == 'field');
