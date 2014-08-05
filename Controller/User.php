@@ -128,6 +128,14 @@ class User extends \FluxAPI\Controller
 
     public function logout()
     {
+        $userId = $this->_api->app['session']->get('userId');
+
+        if ($userId) {
+            $user = $this->_api->loadUser($userId);
+            $user->lastLogoutAt = new \DateTime();
+            $this->_api->saveUser($user);
+        }
+
         $this->_api->app['session']->remove('userId');
     }
 
