@@ -113,6 +113,8 @@ class User extends \FluxAPI\Controller
         if ($user) {
             if ($this->checkEncryptedPassword($password, $user->password)) {
                 $this->_api->app['session']->set('userId', $user->id);
+                $user->lastLoginAt = new \DateTime();
+                $this->_api->saveUser($user);
                 return TRUE;
             } else {
                 throw new \InvalidArgumentException('Incorrect password or username given.');

@@ -34,6 +34,10 @@ class User extends \Plugins\FluxAPI\Core\Model
             'name' => 'permissions'
         )))
         ->addField(new Field(array(
+            'type' => Field::TYPE_DATETIME,
+            'name' => 'lastLoginAt'
+        )))
+        ->addField(new Field(array(
             'name' => 'userGroups',
             'type' => Field::TYPE_RELATION,
             'relationType' => Field::BELONGS_TO_MANY,
